@@ -1,0 +1,43 @@
+# A dolgozat felépítése
+
+Összesen kell legalább 45 (de inkább 50) oldalt írni, és a következő részekből kell állnia:
+
+- Belső fedőlap
+- Tartalomjegyzék
+- Bevezetés
+    - 1-2 oldal
+    - A téma bemutatása: rövid ismertető a téma jelentőségéről, aktualitásáról, a probléma megfogalmazása
+    - Motiváció
+    - A bevezetőt mindenki el fogja olvasni, ezért érdemes itt a legfontosabb információkat összefoglalni
+- Felhasználói dokumentáció
+    - Legalább 15 oldal, de inkább 20 vagy több
+    - Ez a rész a felhasználók számára készült, akik a programot használni fogják, szóval Marika néninek is értenie kell
+    - Célközönség bemutatása: kik azok, akiknek a programot készítettük
+    - Előfeltételek telepítése (bármilyen modern böngésző, operációs rendszer)
+        - Szükséges hardver: lényegében bármi, ami elindít egy böngészőt
+    - Program telepítése (webappnál nem szükséges, elég a böngésző megléte)
+        - Lényegében ez a regisztráció a webapphoz
+    - Program használata, funkciók, menüpontok, stb. Itt lépésről lépésre le kell írni mindent; nem kell nagyon részletesen, de ki kell térni szinte mindenre
+        - Érdemes a játék logikáját is leírni röviden
+    - Hibakezelés: mit csináljon a felhasználó, ha hibát kap
+- Fejlesztői dokumentáció
+    - Legalább 15 oldal, de inkább 20 vagy több
+    - Fejlesztői környzet beállítása (szükséges szoftverek, könyvtárak, ajánlott editor, stb)
+    - Projekt felépítése:
+        - főbb könyvtárak, fájlok, stb.
+        - főbb parancsok, amikre szükég lehet, pl `npm install` / `npm start` / `npm run build` / `npm run lint` / `npm run test`, stb
+    - Alkalmazott könyvtárak, technológiák bemutatása (pl. JS, React, egyéb könyvtárak)
+    - Use-case diagram
+    - UML diagramok (legalább egy osztálydiagram)
+    - Deployment: hogyan lehet a programot elérhetővé tenni a felhasználók számára
+        - hogyan kell buildelni a programot és hogyan kell feltölteni egy szerverre
+        - ehhez lehet CD-t készíteni a GitHub Actions segítségével, ez is érdekes lehet, mivel a tananyagban nem szerepel
+    - Tesztelés: hogyan lehet tesztelni a programot
+        - unit tesztek, integrációs tesztek, stb.
+        - ha van, akkor ezt érdemes előre megírni, mert a tesztelési rész nagyon sok időt vehet igénybe
+        - ha van, akkor érdemes a CI/CD-t is bemutatni (pl a GitHub Actions le tudja futtatni a teszteket minden push után)
+        - ha van, akkor érdemes a coverage-t is bemutatni (a tesztek melyik kódrészleteket fedik le, erre vannak eszközök, amik képesek ezt számolni)
+    - További fejlesztési lehetőségek
+        - pl. új funkciók, új technológiák, stb.
+- Köszönetnyilvánítás (max 1 oldal)
+- Irodalomjegyzék (ha a téma szükségessé teszi): A szakdolgozatnak tartalmaznia kell azon forrásmunkákra való hivatkozásokat, amelyeket a hallgató a megoldás során felhasznált.
