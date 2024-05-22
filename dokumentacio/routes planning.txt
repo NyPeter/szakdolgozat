@@ -1,0 +1,7 @@
+/ - root/index ( as guest: login, register)(as logged in: rooms, scoreboard, account, log out)
+/login (email, password)
+/register (name, email, password, avatar(optional))
+/account/{userID} ( change/upload avatar, nickname, view played games, delete account)
+/rooms ( browse still not started games, maybe also ones you are in and not finished to reconnect)
+/game/{gameID} ( chat, start game, play game)
+/scoreboard 

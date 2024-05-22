@@ -1,0 +1,32 @@
+User:
+    -id: id
+    -name: string
+    -email: string
+    -password: string
+    -games: int
+    -wins: int
+    -avatarURL: string
+
+Game:
+    -id: id
+    -status: enum(waiting, started, finished)
+    -ownerID: int
+    -winnerID: int
+
+Chat:
+    -id: id
+    -message: text
+    -userID: int
+    -gameID: int
+
+User-game:
+    -id: id
+    -userID: int
+    -gameID: int
+
+relations:
+    User - Game: 1 - N (winner)
+    User - Game: 1 - N (lobby owner)
+    User - Game: N - N (players)
+    Chat - Game: N - 1
+    Chat - User: N - 1

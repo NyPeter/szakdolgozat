@@ -5,9 +5,9 @@ Römi (Rummy) kártyajátékok egy csoportjának összefoglaló neve. Közös be
 
 Römi kártya
 
-francia kártya, 2×52 lap + 4 vagy 6 dzsóker Játék típusa: gyűjtő-lerakó Játékosok: 2, 3, 4
+francia, 2×52 lap + 4 vagy 6 dzsóker Játék típusa: gyűjtő-lerakó Játékosok: 2, 3, 4, 5, 6
 
-2-4 személy játékánál 2 csomag francia sorozatjelű kártyát használunk.Közös megegyezéssel a dzsókerek használata mellőzhető, sőt a szerencse elemek csökkentése miatt ajánlatos.
+2-4 személy játékánál 2 csomag francia sorozatjelű kártyát használunk. 5-6 játékos 3 csomag kártyával játsszunk, 3×52 lappal és 9 dzsókerrel. Közös megegyezéssel a dzsókerek használata mellőzhető, sőt a szerencse elemek csökkentése miatt ajánlatos. 
 
 Egy römi játszma (buli) hét osztásból áll. A játszmát megnyeri az a személy, aki összesített eredményeit tekintve a legkevesebb pontot gyűjtötte.
 A römi játék célja
@@ -79,3 +79,5 @@ A lapjait elfogyasztó személy megnyeri a játékot. Ezért (-) 10 pontot írha
 A kártyák értéke a végső elszámolásnál: Ász: 11 pont. Király, dáma és bubi: 10 pont. A számozott lapokat a rajtuk lévő értékkel kell számolni, a dzsóker pedig 15 pontot ér.
 
 Az osztásonként elért eredményeket a játékvezető papírra jegyzi, és folyamatosan összesíti. A 7, 9 vagy 10 osztásból álló partit az a játékos nyeri, aki a legkevesebb pontot gyűjtötte. Szokás a römit pénzre is játszani. Osztásonként vagy partinként fizetnek a vesztesek a nyertesnek.
+
+source: https://hu.wikipedia.org/wiki/R%C3%B6mi
