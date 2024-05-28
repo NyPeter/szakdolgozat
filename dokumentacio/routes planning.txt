@@ -1,7 +1,9 @@
-/ - root/index ( as guest: login, register)(as logged in: rooms, scoreboard, account, log out)
-/login (email, password)
-/register (name, email, password, avatar(optional))
-/account/{userID} ( change/upload avatar, nickname, view played games, delete account)
-/rooms ( browse still not started games, maybe also ones you are in and not finished to reconnect)
-/game/{gameID} ( chat, start game, play game)
-/scoreboard 
+/ - root/index ( as guest: login, register)(as logged in: games, scoreboard, account, log out)
+POST - /login (email, password)
+POST - /register (name, email, password, avatar(optional))
+PATCH - /account/({userID}) ( change/upload avatar, nickname, view played games, delete account)
+GET - /games ( browse still not started games, maybe also ones you are in and not finished to reconnect, only play oone game at a time)
+POST - /game/{gameID}/start ( chat, start game)
+POST - /game/{gameID}/surrender ( chat, start game)
+GET, POST, DELETE - /game/{gameID}/chat 
+GET - /scoreboard 

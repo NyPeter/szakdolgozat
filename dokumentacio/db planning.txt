@@ -3,30 +3,32 @@ User:
     -name: string
     -email: string
     -password: string
-    -games: int
-    -wins: int
+        -games: int
+        -wins: int
     -avatarURL: string
+    -isAdmin: bool
+    -suspendedUntil: null or DateTime
+    -mutedUntil: null or DateTime
 
 Game:
     -id: id
     -status: enum(waiting, started, finished)
-    -ownerID: int
-    -winnerID: int
+    -ownerID: int - foreign key refers to User.id
+    -winnerID: int - foreign key refers to User.id
 
 Chat:
     -id: id
     -message: text
-    -userID: int
-    -gameID: int
+    -userID: int - foreign key refers to User.id
+    -gameID: int - foreign key refers to Game.id
 
-User-game:
+GameUser:
     -id: id
-    -userID: int
-    -gameID: int
+    -isSurrendered: bool
+    -gameID: int - foreign key refers to Game.id
+    -userID: int - foreign key refers to User.id
 
 relations:
-    User - Game: 1 - N (winner)
-    User - Game: 1 - N (lobby owner)
-    User - Game: N - N (players)
+    User - Game: N - N
     Chat - Game: N - 1
     Chat - User: N - 1
