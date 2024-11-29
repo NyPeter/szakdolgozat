@@ -4,7 +4,8 @@
   "description": "Szakdolgozat backend",
   "scripts": {
     "dev": "npx nodemon -e js,mjs,json server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "db": "npx sequelize-cli db:migrate:undo:all && npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
   },
   "author": "Nyitrai Péter",
   "devDependencies": {
@@ -22,6 +23,7 @@
   "dependencies": {
     "@fastify/autoload": "^5.8.0",
     "@fastify/jwt": "^8.0.0",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "fastify": "^4.26.2",
     "fluent-json-schema": "^4.2.1",

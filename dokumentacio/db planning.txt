@@ -3,12 +3,12 @@ User:
     -name: string
     -email: string
     -password: string
-        -games: int
-        -wins: int
     -avatarURL: string
     -isAdmin: bool
     -suspendedUntil: null or DateTime
     -mutedUntil: null or DateTime
+
+npx sequelize-cli model:generate --name User --attributes name:string,email:string,password:string,avatarURL:string,isAdmin:boolean,suspendedUntil:date,mutedUntil:date
 
 Game:
     -id: id
@@ -16,17 +16,23 @@ Game:
     -ownerID: int - foreign key refers to User.id
     -winnerID: int - foreign key refers to User.id
 
+npx sequelize-cli model:generate --name Game --attributes status:enum:waiting,started,finished,ownerID:
+
 Chat:
     -id: id
     -message: text
     -userID: int - foreign key refers to User.id
     -gameID: int - foreign key refers to Game.id
 
+npx sequelize-cli model:generate --name User --attributes name:string,email:string,password:string,avatarURL:string,isAdmin:boolean,suspendedUntil:date,mutedUntil:date
+
 GameUser:
     -id: id
     -isSurrendered: bool
     -gameID: int - foreign key refers to Game.id
     -userID: int - foreign key refers to User.id
+
+npx sequelize-cli model:generate --name User --attributes name:string,email:string,password:string,avatarURL:string,isAdmin:boolean,suspendedUntil:date,mutedUntil:date
 
 relations:
     User - Game: N - N

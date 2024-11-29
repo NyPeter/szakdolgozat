@@ -22,5 +22,6 @@ module.exports = {
         startLines: 1,
       },
     ],
+    'no-plusplus': 'off',
   },
 };
