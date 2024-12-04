@@ -31,7 +31,7 @@ module.exports = {
       users.push({
         name: faker.person.fullName(),
         email: faker.internet.email(),
-        password: faker.internet.password(),
+        password: faker.internet.password({ length: 10 }),
         avatarURL: faker.image.avatar(),
         isAdmin: false,
         suspendedUntil: null,

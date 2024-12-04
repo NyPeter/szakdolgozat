@@ -16,11 +16,13 @@ module.exports = {
       ownerID: {
         type: Sequelize.INTEGER,
         references: { model: 'Users', key: 'id' },
+        allowNull: false,
         onDelete: 'NO ACTION',
       },
       winnerID: {
         type: Sequelize.INTEGER,
         references: { model: 'Users', key: 'id' },
+        allowNull: true,
         onDelete: 'NO ACTION',
       },
       createdAt: {

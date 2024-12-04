@@ -1,0 +1,48 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url('../../../public/pexels-didsss-2508565.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+@font-face {
+  font-family: 'Rooster';
+  src: url('../../../public/ROOSTER\ PERSONAL\ USE.ttf') format('truetype');
+}
+
+.menu-title {
+  font-family: 'Rooster', Arial, sans-serif;
+  font-size: 6rem;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  color: black;
+  text-decoration: none; /* Remove underline */
+  cursor: pointer; /* Pointer cursor to show it's clickable */
+  transition: color 0.3s ease; /* Smooth color change on hover */
+}
+
+.menu-title:hover {
+  color: #ff0707; /* Change title color on hover */
+}
+
+.menu-button {
+  width: 200px;
+  margin: 0.5rem 0;
+}
+
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%; /* Ensure full width */
+  margin: 0; /* Remove any external margin */
+  padding: 0; /* Remove any padding */
+  box-sizing: border-box; /* Ensure padding does not affect size */
+  text-align: center; /* Align text inside the container */
+}
+
+.menu-container > * {
+  max-width: 100%; /* Ensure child elements do not exceed the container */
+}

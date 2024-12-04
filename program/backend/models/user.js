@@ -7,8 +7,10 @@ const bcrypt = require('bcrypt');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      User.belongsToMany(models.Game, { through: models.GameUser, foreignKey: 'userID' });
+      User.belongsToMany(models.Game, { through: models.GameUser, as: 'GamesPlayed' });
       User.hasMany(models.Chat, { foreignKey: 'userID' });
+      User.hasMany(models.Game, { foreignKey: 'ownerID', as: 'GamesOwned' });
+      User.hasMany(models.Game, { foreignKey: 'winnerID', as: 'GamesWon' });
     }
 
     comparePassword(password) {
@@ -24,13 +26,42 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   User.init({
-    name: DataTypes.STRING,
-    email: DataTypes.STRING,
-    password: DataTypes.STRING,
-    avatarURL: DataTypes.STRING,
-    isAdmin: DataTypes.BOOLEAN,
-    suspendedUntil: DataTypes.DATE,
-    mutedUntil: DataTypes.DATE,
+    name: {
+      allowNull: false,
+      unique: true,
+      type: DataTypes.STRING,
+    },
+    email: {
+      allowNull: false,
+      unique: true,
+      type: DataTypes.STRING,
+      validate: {
+        isEmail: true,
+      },
+    },
+    password: {
+      allowNull: false,
+      type: DataTypes.STRING,
+      validate: {
+        len: [8, 128],
+      },
+    },
+    avatarURL: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    suspendedUntil: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    mutedUntil: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   }, {
     sequelize,
     modelName: 'User',
@@ -38,6 +69,12 @@ module.exports = (sequelize, DataTypes) => {
       beforeCreate: (user) => {
         // eslint-disable-next-line no-param-reassign
         user.password = bcrypt.hashSync(user.password, 12);
+      },
+      beforeBulkCreate: (users) => {
+        users.forEach((user) => {
+          // eslint-disable-next-line no-param-reassign
+          user.password = bcrypt.hashSync(user.password, 12);
+        });
       },
     },
   });

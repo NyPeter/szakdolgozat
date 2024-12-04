@@ -1,0 +1,82 @@
+/* Centers the page and applies a background image */
+.Login {
+  display: flex;
+  flex-direction: column; /* Stacks the title and form */
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-image: url("../../../public/pexels-didsss-2508565.jpg"); /* Replace with your image */
+  background-size: cover;
+  background-position: center;
+  color: black; /* Ensure text is readable on dark images */
+}
+
+/* Römi Title Styling */
+.menu-title {
+  font-family: 'Rooster', Arial, sans-serif;
+  font-size: 6rem;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  color: black;
+  text-decoration: none; /* Remove underline */
+  cursor: pointer; /* Pointer cursor to show it's clickable */
+  transition: color 0.3s ease; /* Smooth color change on hover */
+}
+
+.menu-title:hover {
+  color: #ff0707; /* Change title color on hover */
+}
+
+
+/* Constrain form width */
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.9); /* Transparent white background */
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Input fields styling */
+.login-form .form-control {
+  margin-bottom: 15px;
+}
+
+/* Full-width button */
+.login-form button {
+  width: 100%;
+}
+
+.text-danger {
+  font-size: 0.875rem;
+}
+
+/* Add responsive adjustments */
+@media (max-width: 768px) {
+  .menu-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .login-form {
+    padding: 15px;
+  }
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.register-link .btn {
+  font-size: 1rem;
+  padding: 0.5rem 1.5rem;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.register-link .btn:hover {
+  background-color: #8bff07;
+  color: white;
+}

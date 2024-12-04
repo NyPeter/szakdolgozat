@@ -10,15 +10,18 @@ module.exports = {
       },
       isSurrendered: {
         type: Sequelize.BOOLEAN,
+        defaultValue: false,
       },
       gameID: {
         type: Sequelize.INTEGER,
         references: { model: 'Games', key: 'id' },
+        allowNull: false,
         onDelete: 'CASCADE',
       },
       userID: {
         type: Sequelize.INTEGER,
         references: { model: 'Users', key: 'id' },
+        allowNull: false,
         onDelete: 'CASCADE',
       },
       createdAt: {

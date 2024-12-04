@@ -9,16 +9,19 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       message: {
+        allowNull: false,
         type: Sequelize.TEXT,
       },
       userID: {
         type: Sequelize.INTEGER,
         references: { model: 'Users', key: 'id' },
         onDelete: 'NO ACTION',
+        allowNull: false,
       },
       gameID: {
         type: Sequelize.INTEGER,
         references: { model: 'Games', key: 'id' },
+        allowNull: false,
         onDelete: 'CASCADE',
       },
       createdAt: {

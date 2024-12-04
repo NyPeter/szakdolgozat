@@ -9,24 +9,36 @@ module.exports = {
         type: Sequelize.INTEGER,
       },
       name: {
+        allowNull: false,
+        unique: true,
         type: Sequelize.STRING,
       },
       email: {
+        allowNull: false,
+        unique: true,
         type: Sequelize.STRING,
+        validate: {
+          isEmail: true,
+        },
       },
       password: {
+        allowNull: false,
         type: Sequelize.STRING,
       },
       avatarURL: {
+        allowNull: true,
         type: Sequelize.STRING,
       },
       isAdmin: {
+        defaultValue: false,
         type: Sequelize.BOOLEAN,
       },
       suspendedUntil: {
+        allowNull: true,
         type: Sequelize.DATE,
       },
       mutedUntil: {
+        allowNull: true,
         type: Sequelize.DATE,
       },
       createdAt: {
