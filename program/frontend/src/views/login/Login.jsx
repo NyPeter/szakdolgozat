@@ -40,6 +40,9 @@ export const Login = () => {
 
   return (
     <div className="Login">
+      <Button variant="secondary" href="/" className="leaderboard-back-btn">
+        Vissza a Menübe
+      </Button>
       <Link to="/" className="menu-title">
         Römi
       </Link>

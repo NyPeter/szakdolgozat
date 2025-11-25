@@ -5,6 +5,7 @@ export const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     // user is not authenticated
+    console.log("not auth")
     return <Navigate to="/" />;
   }
   return children;

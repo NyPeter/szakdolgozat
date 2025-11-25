@@ -5,6 +5,9 @@ import { Menu } from './menu/Menu';
 import { Login } from './login/Login';
 import { Register } from './register/Register';
 import { ProtectedRoute } from '../ProtectedRoute';
+import { LeaderBoard } from './leaderBoard/LeaderBoard';
+import { Games } from './games/Games';
+import { Profile } from './profile/Profile';
 
 
 function App() {
@@ -16,12 +19,12 @@ function App() {
           <Route index element={<Menu />} />
           <Route path="Register" element={<Register />} />
           <Route path="Login" element={<Login />} />
-          {/* <Route path="Leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+          <Route path="Leaderboard" element={<ProtectedRoute><LeaderBoard /></ProtectedRoute>} />
           <Route path="Games" element={<ProtectedRoute><Games /></ProtectedRoute>} />
-          <Route path="Game" element={<ProtectedRoute><Lobby /></ProtectedRoute>} >
+          {/* <Route path="Game" element={<ProtectedRoute><Lobby /></ProtectedRoute>} >
             <Route path=":id" element={<ProtectedRoute><Lobby /></ProtectedRoute>} />
-          </Route>
-          <Route path="Profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} /> */}
+          </Route> */}
+          <Route path="Profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to='/' />} />
         </Routes>
       </BrowserRouter>

@@ -1,0 +1,65 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url('../../../public/pexels-didsss-2508565.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+@font-face {
+  font-family: 'Rooster';
+  src: url('../../../public/ROOSTER PERSONAL USE.ttf') format('truetype');
+}
+
+.games-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding-top: 3rem;
+  text-align: center;
+}
+
+.games-header {
+  width: 90%;
+  max-width: 1000px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.games-title {
+  font-family: 'Rooster', Arial, sans-serif;
+  font-size: 4rem;
+  color: black;
+  text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
+}
+
+.games-table {
+  width: 90%;
+  max-width: 1000px;
+  margin-top: 2rem;
+  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.games-pagination {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.games-btn {
+  width: 150px;
+}
+
+.games-page {
+  font-size: 1.2rem;
+  color: black;
+}
+
+.games-back-btn,
+.games-create-btn {
+  width: 180px;
+}

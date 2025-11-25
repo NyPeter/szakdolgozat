@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url('../../../public/pexels-didsss-2508565.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
+@font-face {
+  font-family: 'Rooster';
+  src: url('../../../public/ROOSTER PERSONAL USE.ttf') format('truetype');
+}
+
+.leaderboard-back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.leaderboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding-top: 4rem;
+  text-align: center;
+}
+
+.leaderboard-title {
+  font-family: 'Rooster', Arial, sans-serif;
+  font-size: 5rem;
+  color: black;
+  text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.7);
+  margin-bottom: 2rem;
+}
+
+.leaderboard-table {
+  width: 90%;
+  max-width: 900px;
+  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.leaderboard-pagination {
+  margin-bottom: 1.5rem;  
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.leaderboard-btn {
+  width: 150px;
+}
+
+.leaderboard-page {
+  font-size: 1.2rem;
+  color: black;
+}

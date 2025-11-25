@@ -14,6 +14,18 @@ const fastify = Fastify({
   },
 });
 
+// File upload init
+fastify.register(require('@fastify/multipart'), {
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+});
+
+fastify.register(require('@fastify/static'), {
+  root: join(__dirname, 'uploads'),
+  prefix: '/uploads/', // files accessed as /uploads/<file>
+});
+
 // Set up JWT authentication
 fastify.register(require('@fastify/jwt'), {
   secret,

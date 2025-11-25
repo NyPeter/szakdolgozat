@@ -76,6 +76,10 @@ module.exports = (sequelize, DataTypes) => {
           user.password = bcrypt.hashSync(user.password, 12);
         });
       },
+      beforeUpdate: (user) => {
+        // eslint-disable-next-line no-param-reassign
+        user.password = bcrypt.hashSync(user.password, 12);
+      },
     },
   });
   return User;

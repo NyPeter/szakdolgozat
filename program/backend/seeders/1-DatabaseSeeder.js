@@ -51,6 +51,9 @@ module.exports = {
     // eslint-disable-next-line no-restricted-syntax
     for (const status of statuses) {
       const owner = faker.helpers.arrayElement(insertedUsers);
+      if (status !== 'finished') {
+        usersInUnfinishedGames.add(owner);
+      }
       games.push({
         status,
         ownerID: owner.id,
@@ -71,8 +74,9 @@ module.exports = {
         ? insertedUsers.filter((user) => !usersInUnfinishedGames.has(user.id))
         : insertedUsers;
 
-      const participantCount = faker.number.int({ min: 2, max: 6 });
+      const participantCount = faker.number.int({ min: 1, max: 5 });
       const participants = faker.helpers.arrayElements(availableUsers, participantCount);
+      participants.unshift(insertedUsers.find((u) => u.id === game.ownerID));
 
       gameParticipantsMap[game.id] = participants; // Store participants for this game
 
