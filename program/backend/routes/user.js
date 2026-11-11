@@ -11,11 +11,7 @@ module.exports = async (fastify) => {
 
   fastify.put('/user', { onRequest: [fastify.auth] }, async (request, reply) => {
     const { id } = request.user;
-    const {
-      email,
-      name,
-      password,
-    } = request.body;
+    const { email, name } = request.body;
     const user = await User.findByPk(id);
     if (!user) {
       return reply.status(404).send({ error: 'User not found' });
@@ -23,9 +19,49 @@ module.exports = async (fastify) => {
     await user.update({
       name: name ?? user.name,
       email: email ?? user.email,
-      password: password ?? user.password,
     });
     return reply.send(user);
+  });
+
+  fastify.put('/user/password', { onRequest: [fastify.auth] }, async (request, reply) => {
+    const { id } = request.user;
+    const { currentPassword, newPassword } = request.body;
+    const user = await User.findByPk(id);
+    if (!user) {
+      return reply.status(404).send({ error: 'User not found' });
+    }
+    if (user.comparePassword(currentPassword)) {
+      await user.update({
+        password: newPassword ?? user.password,
+      });
+      return reply.send({ message: 'Password updated.' });
+    }
+    return reply.status(401).send({ message: 'Current password doesn\'t match!' });
+  });
+
+  fastify.delete('/user', { onRequest: [fastify.auth] }, async (request, reply) => {
+    try {
+      const { id } = request.user;
+
+      const user = await User.findByPk(id);
+
+      if (!user) {
+        return reply.status(404).send({ error: 'User not found' });
+      }
+
+      // Delete avatar file if exists
+      const files = await fs.promises.readdir('uploads');
+      const oldAvatar = files.find((f) => f.startsWith(`avatar_${request.user.id}.`));
+      if (oldAvatar) {
+        await fs.promises.unlink(`uploads/${oldAvatar}`);
+      }
+
+      await user.destroy();
+
+      return reply.status(204).send({ message: 'User account deleted successfully.' });
+    } catch (err) {
+      return reply.status(500).send({ message: `Error deleting avatar: ${err}` });
+    }
   });
 
   fastify.post('/user/avatar', { onRequest: [fastify.auth] }, async (request, reply) => {

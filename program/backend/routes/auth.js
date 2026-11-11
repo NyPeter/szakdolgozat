@@ -12,6 +12,10 @@ module.exports = async (fastify) => {
     if (!user) {
       return reply.status(404).send({ message: 'A megadott email címmel nem létezik felhasználó.' });
     }
+    if (user.suspendedUntil && new Date(user.suspendedUntil) > new Date()) {
+      const until = new Date(user.suspendedUntil).toLocaleDateString('hu-HU');
+      return reply.status(403).send({ message: `A fiókod fel van függesztve ${until}-ig.` });
+    }
     if (user.comparePassword(password)) {
       const token = fastify.jwt.sign(user.toJSON());
       return reply.status(200).send({ token });
@@ -25,7 +29,7 @@ module.exports = async (fastify) => {
     if (!name || !email || !password) {
       return reply.status(400).send({ message: 'Nem adtál meg nevet, emailt vagy jelszót.' });
     }
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name, email, password, avatarURL: '/uploads/default_avatar.jpg' });
     const token = fastify.jwt.sign(user.toJSON());
     return reply.status(201).send({ token });
   });

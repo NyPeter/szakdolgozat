@@ -1,6 +1,7 @@
 const db = require('../models');
+const { getRoomSettings } = require('../socket/gameManager');
 
-const { User, Game } = db;
+const { User, Game, GameUser } = db;
 
 module.exports = async (fastify) => {
   fastify.get('/games/:page', { onRequest: [fastify.auth] }, async (request, reply) => {
@@ -30,14 +31,35 @@ module.exports = async (fastify) => {
         distinct: true,
       });
 
-      const formatted = rows.map((game) => ({
-        id: game.id,
-        status: game.status,
-        owner: game.Owner?.name,
-        playerCount: game.Players.length,
-      }));
+      const formatted = rows.map((game) => {
+        const settings = getRoomSettings(game.id);
+        return {
+          id: game.id,
+          status: game.status,
+          owner: game.Owner?.name,
+          playerCount: game.Players.length,
+          maxPlayers: settings.maxPlayers,
+          hasPassword: !!settings.password,
+        };
+      });
 
-      return reply.send({ rows: formatted, count });
+      const myGameUser = await GameUser.findOne({
+        where: { userID: request.user.id, isSurrendered: false },
+        include: [{
+          model: Game,
+          where: { status: 'started' },
+          required: true,
+          include: [{ model: User, as: 'Owner', attributes: ['id', 'name'] }],
+        }],
+      });
+
+      return reply.send({
+        rows: formatted,
+        count,
+        myActiveGame: myGameUser
+          ? { id: myGameUser.Game.id, owner: myGameUser.Game.Owner?.name }
+          : null,
+      });
     } catch (err) {
       return reply.status(500).send({ error: err.message });
     }
