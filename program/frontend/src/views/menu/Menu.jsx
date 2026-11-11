@@ -1,12 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Container } from 'react-bootstrap';
+import axios from 'axios';
 import './Menu.css';
 
+
 export const Menu = () => {
-  const isLoggedIn = localStorage.getItem("accessToken") ? true : false;
+  const token = localStorage.getItem('accessToken');
+  const isLoggedIn = !!token;
+  const [isAdmin, setIsAdmin] = useState(false);
+  const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
+
+  useEffect(() => {
+    if (!token) return;
+    axios
+      .get(`${api}/user`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => setIsAdmin(!!res.data.user?.isAdmin))
+      .catch(() => {});
+  }, [token]);
 
   const logOut = () => {
-    localStorage.removeItem("accessToken");
+    localStorage.removeItem('accessToken');
     window.location.reload();
   };
 
@@ -35,6 +48,11 @@ export const Menu = () => {
           <Button variant="success" href="/Profile" className="menu-button">
             Profil
           </Button>
+          {isAdmin && (
+            <Button variant="outline-warning" href="/Admin" className="menu-button">
+              Admin
+            </Button>
+          )}
           <Button variant="outline-success" onClick={logOut} className="menu-button">
             Kijelentkezés
           </Button>

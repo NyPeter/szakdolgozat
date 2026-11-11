@@ -3,7 +3,8 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
-import "./Login.css"; // Updated styles with background image
+import { connectSocket } from "../../socket";
+import "./Login.css";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,6 +12,7 @@ export const Login = () => {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
+  const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
   function validateForm() {
     return email.length > 0 && password.length > 0;
@@ -20,7 +22,7 @@ export const Login = () => {
     event.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:4000/login", {
+      const response = await axios.post(`${api}/login`, {
         email,
         password,
       });
@@ -29,12 +31,13 @@ export const Login = () => {
 
       if (token) {
         window.localStorage.setItem("accessToken", token);
+        connectSocket();
         navigate("/");
       } else {
-        setError("Invalid credentials or server error.");
+        setError("Hibás belépési adatok.");
       }
     } catch (error) {
-      setError("Login failed. Please try again.");
+      setError("Hiba történt, próbáljon belépni újra.");
     }
   }
 

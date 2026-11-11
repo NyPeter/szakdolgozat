@@ -3,6 +3,7 @@ import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import { Link, useNavigate } from "react-router";
 import axios from "axios";
+import { connectSocket } from "../../socket";
 import "./Register.css"; // Updated styles with background image
 
 export const Register = () => {
@@ -13,7 +14,9 @@ export const Register = () => {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
+  const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
+  // TODO: proper validation on frontend
   function validateForm() {
     return email.length > 0 && password.length > 0 && name.length > 0;
   }
@@ -22,7 +25,7 @@ export const Register = () => {
     event.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:4000/register", {
+      const response = await axios.post(`${api}/register`, {
         email,
         name,
         password,
@@ -32,6 +35,7 @@ export const Register = () => {
 
       if (token) {
         window.localStorage.setItem("accessToken", token);
+        connectSocket();
         navigate("/");
       } else {
         setError("Server error.");

@@ -11,12 +11,13 @@ export const LeaderBoard = () => {
 
   const loadData = async (p) => {
     setLoading(true);
+    const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
     try {
       const token = localStorage.getItem("accessToken");
 
       const { data } = await axios.get(
-        `http://localhost:4000/leaderboard/${p}`,
+        `${api}/leaderboard/${p}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

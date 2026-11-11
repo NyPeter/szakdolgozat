@@ -62,10 +62,6 @@ export const Profile = () => {
         email: editData.email,
       };
 
-      if (editData.currentPassword && editData.newPassword) {
-        payload.password = editData.newPassword;
-      }
-
       const { data } = await axios.put(`${api}/user`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -77,6 +73,23 @@ export const Profile = () => {
       alert("Hiba történt a frissítésnél.");
     }
   };
+
+  const savePassword = async () => {
+    try {
+      const payload = {
+        currentPassword: editData.currentPassword,
+        newPassword: editData.newPassword,
+      }
+      const { data } = await axios.put(`${api}/user/password`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert(data.message);
+    } catch (err) {
+      console.error("Update error:", err);
+      alert("Hiba történt a frissítésnél.");
+    }
+  }
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -203,6 +216,10 @@ export const Profile = () => {
           />
         </Form.Group>
 
+        <Button variant="success" className="mt-3" onClick={saveProfile}>
+          Mentés
+        </Button>
+
         <Form.Group className="mt-3">
           <Form.Label>Jelenlegi jelszó</Form.Label>
           <Form.Control
@@ -225,8 +242,8 @@ export const Profile = () => {
           />
         </Form.Group>
 
-        <Button variant="success" className="mt-3" onClick={saveProfile}>
-          Mentés
+        <Button variant="success" className="mt-3" onClick={savePassword}>
+          Jelszó változatása
         </Button>
       </Form>
 
