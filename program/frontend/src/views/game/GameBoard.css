@@ -1,0 +1,440 @@
+/* ── Outer wrapper ──────────────────────────────────────────────────────── */
+.game-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ── Top bar: round badge + countdown + scores ──────────────────────────── */
+.gb-top-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.gb-round {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Persistent scores strip */
+.gb-scores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.gb-score-entry {
+  white-space: nowrap;
+}
+
+/* ── Opponents strip ────────────────────────────────────────────────────── */
+.gb-opponents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  padding: 0.6rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.gb-opponent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+/* Active player gets a subtle highlight ring */
+.gb-opponent-active {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 2px rgba(255, 255, 150, 0.55);
+}
+
+.gb-opponent-surrendered {
+  opacity: 0.45;
+}
+
+.gb-opponent-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.gb-opponent-name {
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Overlapping fan of face-down cards — fixed width prevents overflow */
+.gb-opponent-fan {
+  position: relative;
+  height: 44px;
+  width: 148px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.gb-fan-overflow {
+  position: absolute;
+  top: 14px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.75rem;
+}
+
+.gb-opponent-count {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.75rem;
+}
+
+/* ── Piles row (cserelap / talon / discard) ─────────────────────────────── */
+.gb-piles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1rem 1.5rem;
+  background: rgba(0, 90, 0, 0.45);
+  border-radius: 12px;
+}
+
+.gb-pile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Fixed min-height prevents subtitle text ("handoláshoz") from shifting card down */
+.gb-pile-label {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.72rem;
+  text-align: center;
+  min-height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Placeholder shown when a pile is empty */
+.gb-pile-empty {
+  width: 63px;
+  height: 90px;
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 1.1rem;
+}
+
+/* ── Melds zone (separate from piles, horizontal scroll) ────────────────── */
+.gb-melds {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  min-height: 100px;
+  background: rgba(0, 60, 20, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px;
+}
+
+.gb-melds::-webkit-scrollbar {
+  height: 6px;
+}
+.gb-melds::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.gb-melds-empty {
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 0.82rem;
+  align-self: center;
+  margin: auto;
+  white-space: nowrap;
+}
+
+/* A single meld group on the table */
+.gb-meld-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: background 0.12s ease, box-shadow 0.12s ease;
+  flex-shrink: 0;
+}
+
+.gb-meld-group:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Highlighted ring when the meld is selected as a szúrás target */
+.gb-meld-target {
+  background: rgba(41, 128, 185, 0.15);
+  box-shadow: 0 0 0 2px #2980b9;
+}
+
+.gb-meld-owner {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+/* Row of card images inside a meld group */
+.gb-meld-cards {
+  display: flex;
+  gap: 2px;
+}
+
+/* ── Player's own hand ──────────────────────────────────────────────────── */
+.gb-hand-wrap {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.gb-hand-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.82rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Single horizontally scrollable row — no second line */
+/* padding-top provides clearance for the translateY(-10px) hover lift */
+.gb-hand {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-top: 14px;
+  padding-bottom: 6px;
+}
+
+.gb-hand::-webkit-scrollbar {
+  height: 6px;
+}
+.gb-hand::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+/* When the player is choosing which card to give for the cserelap swap,
+   hovering a hand card shows a golden glow as a selection hint. */
+.gb-hand-swap-mode .card-wrapper {
+  cursor: pointer;
+}
+.gb-hand-swap-mode .card-wrapper:hover {
+  filter: drop-shadow(0 4px 10px rgba(243, 156, 18, 0.8));
+  transform: translateY(-10px);
+}
+
+/* ── Card styles (shared across the whole board) ────────────────────────── */
+
+/* Outer wrapper owns all sizing and animation */
+.card-wrapper {
+  position: relative;
+  display: inline-block;
+  border-radius: 5px;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+/* The actual image fills the wrapper */
+.card-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 5px;
+  user-select: none;
+}
+
+/* Tint overlays — positioned on top of the image, invisible to pointer events */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+/* Blue tint + inset ring for selected state (meld building) */
+.card-overlay-selected {
+  background: rgba(41, 128, 185, 0.22);
+  box-shadow: inset 0 0 0 2px #2980b9;
+}
+
+/* Gold inset ring for the card drawn from the discard pile that must be used */
+.card-overlay-must-use {
+  box-shadow: inset 0 0 0 2px #f39c12;
+}
+
+.card-clickable {
+  cursor: pointer;
+}
+
+/* Lift + shadow on hover for any clickable card */
+.card-clickable:hover {
+  transform: translateY(-10px);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+}
+
+/* Blue glow + lift for selected cards */
+.card-selected {
+  transform: translateY(-10px);
+  filter: drop-shadow(0 4px 10px rgba(41, 128, 185, 0.7));
+}
+
+/* Gold glow for the must-use card */
+.card-must-use {
+  filter: drop-shadow(0 0 8px rgba(243, 156, 18, 0.9));
+}
+
+/* ── Sort buttons ────────────────────────────────────────────────────────── */
+.gb-sort-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+/* ── Action buttons row ─────────────────────────────────────────────────── */
+.gb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+}
+
+/* ── Staged-groups indicator ────────────────────────────────────────────── */
+.gb-pending {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+  margin-right: 0.4rem;
+}
+
+.gb-pending-group {
+  background: rgba(39, 174, 96, 0.25);
+  border: 1px solid rgba(39, 174, 96, 0.5);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* ── Status bar ─────────────────────────────────────────────────────────── */
+.gb-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  min-height: 44px;
+}
+
+.gb-status-text {
+  color: white;
+  font-size: 0.92rem;
+}
+
+.gb-error {
+  color: #e74c3c;
+  font-size: 0.88rem;
+}
+
+/* ── Mobile responsive ──────────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .gb-opponents {
+    gap: 0.4rem;
+    padding: 0.4rem 0.5rem;
+  }
+
+  .gb-opponent {
+    min-width: 100px;
+    padding: 4px 6px;
+  }
+
+  .gb-opponent-fan {
+    width: 100px;
+    height: 36px;
+  }
+
+  .gb-piles {
+    gap: 0.8rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .gb-hand-wrap {
+    padding: 0.5rem 0.5rem;
+  }
+
+  .gb-actions {
+    padding: 0.4rem 0.5rem;
+    gap: 0.3rem;
+  }
+
+  .gb-status {
+    font-size: 0.82rem;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .card-wrapper {
+    width: 48px !important;
+    height: 67px !important;
+  }
+}
+
+/* ── Mobile: game room chat as bottom panel ─────────────────────────────── */
+@media (max-width: 700px) {
+  .game-room-body {
+    flex-direction: column !important;
+  }
+
+  .game-room-chat-sidebar {
+    flex: none !important;
+    width: 100% !important;
+  }
+
+  .game-room-chat-sidebar .chat-panel {
+    height: 200px !important;
+  }
+}
