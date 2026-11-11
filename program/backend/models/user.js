@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      User.belongsToMany(models.Game, { through: models.GameUser, as: 'GamesPlayed' });
+      User.belongsToMany(models.Game, { through: models.GameUser, as: 'GamesPlayed', foreignKey: 'userID', otherKey: 'gameID' });
       User.hasMany(models.Chat, { foreignKey: 'userID' });
       User.hasMany(models.Game, { foreignKey: 'ownerID', as: 'GamesOwned' });
       User.hasMany(models.Game, { foreignKey: 'winnerID', as: 'GamesWon' });
@@ -77,8 +77,10 @@ module.exports = (sequelize, DataTypes) => {
         });
       },
       beforeUpdate: (user) => {
-        // eslint-disable-next-line no-param-reassign
-        user.password = bcrypt.hashSync(user.password, 12);
+        if (user.changed('password')) {
+          // eslint-disable-next-line no-param-reassign
+          user.password = bcrypt.hashSync(user.password, 12);
+        }
       },
     },
   });

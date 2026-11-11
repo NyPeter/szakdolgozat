@@ -1,10 +1,16 @@
 {
     "development": {
         "storage": "database/database.sqlite",
-        "dialect": "sqlite"
+        "dialect": "sqlite",
+        "dialectOptions": {
+            "busyTimeout": 5000
+        }
     },
     "test": {
         "dialect": "sqlite",
-        "storage": "database/test_database.sqlite"
+        "storage": "database/test_database.sqlite",
+        "dialectOptions": {
+            "busyTimeout": 5000
+        }
     }
 }
