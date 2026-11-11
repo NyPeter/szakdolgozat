@@ -1,30 +1,27 @@
+A römi (Rummy) kártyajátékok egy csoportjának összefoglaló neve. Közös bennük, hogy a játék során a hasonló kártyalapokat össze kell párosítani. Bár a „römi” szó alatt gyakran egy specifikus römiváltozatot értenek (pl. ginrömi), tágabb értelemben több különböző kártyajátékra utalhat, köztük pl. a kanasztára vagy akár a madzsongra is. Legtöbb változatát dzsókerekkel kiegészített francia kártyával játsszák. 3 egyforma lap esetén új osztás!
 
-Römi
+Handrömi
 
-Römi (Rummy) kártyajátékok egy csoportjának összefoglaló neve. Közös bennük, hogy a játék során a hasonló kártyalapokat össze kell párosítani. Bár a „römi” szó alatt gyakran egy specifikus römiváltozatot értenek (pl. ginrömi), tágabb értelemben több különböző kártyajátékra utalhat, köztük pl. a kanasztára vagy akár a madzsongra is. Legtöbb változatát dzsókerekkel kiegészített francia kártyával játsszák.
-
-Römi kártya
-
+Kártya
 francia, 2×52 lap + 4 vagy 6 dzsóker Játék típusa: gyűjtő-lerakó Játékosok: 2, 3, 4, 5, 6
 
-2-4 személy játékánál 2 csomag francia sorozatjelű kártyát használunk. 5-6 játékos 3 csomag kártyával játsszunk, 3×52 lappal és 9 dzsókerrel. Közös megegyezéssel a dzsókerek használata mellőzhető, sőt a szerencse elemek csökkentése miatt ajánlatos. 
+2-4 személy játékánál 2 csomag francia sorozatjelű kártyát használunk. 5-6 játékos 3 csomag kártyával játsszunk, 3×52 lappal és 9 dzsókerrel. Közös megegyezéssel a dzsókerek használata mellőzhető, sőt a szerencse elemek csökkentése miatt ajánlatos.
 
-Egy römi játszma (buli) hét osztásból áll. A játszmát megnyeri az a személy, aki összesített eredményeit tekintve a legkevesebb pontot gyűjtötte.
-A römi játék célja
+Egy játszma (buli) hét osztásból áll. A játszmát megnyeri az a személy, aki összesített eredményeit tekintve a legkevesebb pontot gyűjtötte.
+A játék célja
 
-A kézlapokat szabályos kombinációkban asztalra rakni úgy, hogy az utolsó kártya a dobóhalomba kerüljön. Ez történhet kézből és szakaszos lerakás után. Handolásnál a játékos valamennyi lapját egyszerre teszi le, szakaszos lerakásnál pedig kombinációi több részletben kerülnek az asztalra. Mindkét esetben megengedett a szúrás, azaz a saját magunk, vagy a többi játékos által lerakott lapcsoport kiegészítése.
+A kézlapokat szabályos kombinációkban asztalra rakni úgy, hogy az utolsó kártya a dobóhalomba kerüljön. Ez történhet kézből (ezt hívjuk handolásnak) és szakaszos lerakás után. Handolásnál a játékos valamennyi lapját egyszerre teszi le, szakaszos lerakásnál pedig kombinációi több részletben kerülnek az asztalra. Mindkét esetben megengedett a szúrás, azaz a saját magunk, vagy a többi játékos által lerakott lapcsoport kiegészítése.
 A lapok pontértéke
 
-A számozott lapoké azonos a rajtuk lévő számmal; a bubik, dámák, királyok és ászok 10-10 pont érnek, a dzsókereket a helyettesített lap értékével számoljuk, illetve kézben maradva 20 ponttal.
+A számozott lapok pontértéke azonos a rajtuk lévő számmal; a bubik, dámák és királyok 10-10, az ászok 11 pontot érnek, a dzsókereket a helyettesített lap értékével számoljuk, illetve kézben maradva 15 ponttal.
 A römiben kétféle kombináció gyűjthető a kártyalapokból
 
-1. sor: azonos színű, rangban egymást követő, legalább három lapból álló sorozatok. Pl. pikk 4, pikk 5, pikk 6 vagy kőr 9, kőr 10, kőr bubi, kőr dáma, kőr király. A lejátszásban a sorok utólagos megosztására, átrendezésére nincs lehetőség. Az ászokat felhasználhatjuk ász, 2, 3, illetve a dáma, király, ász kombinációkban is. Az ász tehát lehet egy sorozatban a legkisebb és a legmagasabb lap is. A teljes színsorozatban csak egy helyen szerepelhet az ász: vagy a 2, vagy a király mellett. Minden sorozatban egy dzsóker is használható egy tetszés szerinti kártya helyettesítésére.
+1. sor: azonos színű, rangban egymást követő, legalább három lapból álló sorozatok. Pl. pikk 4, pikk 5, pikk 6 vagy kőr 9, kőr 10, kőr bubi, kőr dáma, kőr király. A lejátszásban a sorok utólagos megosztására, átrendezésére nincs lehetőség. Az ászokat felhasználhatjuk ász, 2, 3, illetve a dáma, király, ász kombinációkban is. Az ász tehát lehet egy sorozatban a legkisebb és a legmagasabb lap is. A teljes színsorozatban csak két helyen szerepelhet az ász: vagy a 2, vagy a király mellett. Minden sorozatban egy dzsóker is használható egy tetszés szerinti kártya helyettesítésére.
 
-2. csoport: azonos rangú, de különböző színű lapok. Pl. három lapból álló csoport: kőr 8, pikk 8, treff 8 (terc); négy lapból álló csoport: káró ász, kőr ász, pikk ász, treff ász. (kvárt) Ha a játékosok megállapodtak dzsókerek használatában, bármely sor és csoport egy lapját dzsóker helyettesítheti. Fontos és általános szabály, hogy egy csoportban nem szerepelhet két azonos színű kártya.
+2. csoport: azonos rangú, de különböző színű lapok. Pl. három lapból álló csoport: kőr 8, pikk 8, treff 8 (terc); négy lapból álló csoport: káró ász, kőr ász, pikk ász, treff ász. Ha a játékosok megállapodtak dzsókerek használatában, bármely sor és csoport egy lapját dzsóker helyettesítheti. Fontos és általános szabály, hogy egy csoportban nem szerepelhet két azonos színű kártya.
+A játék menete
 
-Römi játék menete
-
-A römi minden mozzanata jobbra tartással történik. A játékosok közösen keverik meg a kártyacsomagot. Az osztó egyesíti a különválasztott halmokat, újra kever rajta, és emelésre kínálja azt a tőle balra ülő játékosnak. Ő tetszése szerinti halmot emel a kártyacsomagból. Az alsó kártyát képével felfelé fordítva az asztal közepére teszi cserelapként. Az emelt rész kerül alulra, az asztalon hagyott rész pedig felülre. Dzsókerrel történő játéknál különös ceremónia kísérheti az emelést. Az emelő a kártyahalom alsó lapjait bemutatja a játékosoknak, és ha dzsókert talál ezek között, az alábbiak szerint osztja ki: első lapként az emelőé, másodikként az osztóé, a többi pedig balra tartással az ülésrend szerint kerül kiosztásra. Cserelapként az első természetes lap lesz felütve.
+A römi minden mozzanata jobbra tartással történik. A játékosok közösen keverik meg a kártyacsomagot. Az osztó egyesíti a különválasztott halmokat, újra kever rajta, és emelésre kínálja azt a tőle balra ülő játékosnak. Ő tetszése szerinti halmot emel a kártyacsomagból. Az alsó kártyát képével felfelé fordítva az asztal közepére teszi (ezt nevezzük handlapnak vagy cserelapnak). Az emelt rész kerül alulra, az asztalon hagyott rész pedig felülre. Dzsókerrel történő játéknál különös ceremónia kísérheti az emelést. Az emelő a kártyahalom alsó lapjait bemutatja a játékosoknak, és ha dzsókert talál ezek között, az alábbiak szerint osztja ki: első lapként az emelőé, másodikként az osztóé, a többi pedig balra tartással az ülésrend szerint kerül kiosztásra. Cserelapként az első természetes lap lesz felütve.
 
 Az osztó egyesével, kettesével vagy hármasával zártan adja a lapokat a játékosoknak. A tőle jobbra ülő 15, a többiek 14-14 kártyát kapnak. Aki esetleg az emelésnél dzsókert kapott, annak egy lappal kevesebbet osztanak. A megmaradó csomagot a cserelapra helyezi, félig fedve azt. Ez a halom a továbbiakban húzható talonként szerepel a játékban.
 
@@ -44,26 +41,18 @@ A kombinációk lerakása történhet szakaszosan vagy handolással. Egy játék
 
 Kézből történő befejezésnél nem kötelező a lerakási minimum teljesítése. Előfordulhat, hogy olyan alacsony pontértékű lapok gyűjtésére kényszerülünk, melyekből a 14 lap összeadott értéke nem éri el az 51-et. A handolónak lehetősége van szúrással a dzsókerszerzésre, melyet szabadon felhasználhat a lerakott, egyébként szabályos lapcsoportok képzésénél.
 
-Aki megkezdte a lerakás műveletét, ám mégsem tudja teljesíteni a minimumot vagy elérni a játék befejezését, visszaveheti kártyáit. Egyetlen kötelezettsége, hogy visszaállítsa az eredeti asztali állapotot. A játékosok közösen ellenőrzik a lerakott kombinációkat. A felfedezett szabálytalanságot bármelyikük jelezheti. A lerakónak ilyenkor ki kell javítani a hibát, pótolni a hiányosságot. Nem ritka esemény a römiben, hogy a játékos az összes lap felvételére kényszerül.
-A leggyakoribb hibák a römiben
+Aki megkezdte a lerakás műveletét, ám mégsem tudja teljesíteni a minimumot vagy elérni a játék befejezését, visszaveheti kártyáit. Egyetlen kötelezettsége, hogy visszaállítsa az eredeti asztali állapotot. A játékosok közösen ellenőrzik a lerakott kombinációkat. A felfedezett szabálytalanságot bármelyikük jelezheti. A lerakónak ilyenkor ki kell javítani a hibát, pótolni a hiányosságot. Nem ritka esemény a römiben, hogy a játékos az összes lap felvételére kényszerül. Amíg a lerakó nem fejezi be a lerakást (nem dob lapot), addig átrendezheti az általa lerakott lapokat.
+A leggyakoribb hibák
 
-- a lerakott kombinációk értéke nem éri el a minimumot;
-
-- a játékos nem tudja befejezni handolással a játékot;
-
-- színhiba a sorozatban;
-
-- színhiba azonos rangú kártyák között (duplázás);
-
-- hiány a sorozatból;
-
-- dobólap jogtalan felvétele;
-
-- cserelap jogtalan felhasználása;
-
-- két dzsóker szerepel egy sorozatban vagy csoportban;
-
-- a játékosnak nem marad dobólapja.
+    a lerakott kombinációk értéke nem éri el a minimumot;
+    a játékos nem tudja befejezni handolással a játékot;
+    színhiba a sorozatban;
+    színhiba azonos rangú kártyák között (duplázás);
+    hiány a sorozatból;
+    dobólap jogtalan felvétele;
+    cserelap jogtalan felhasználása;
+    két dzsóker szerepel egy sorozatban vagy csoportban;
+    a játékosnak nem marad dobólapja.
 
 Nem számít szabálytalanságnak, ha valaki rossz sorrendben rakta le sorozatát. Figyelmeztetni kell tévedésére, és a sorrend javítása után tovább mehet a játék. A négy természetes lapból álló, teljes csoportokat az áttekinthetőség javítása érdekében a dobó halomba szokták rakni, hiszen ezeknek már nincs szerepe a játékban. Ha egy játékos teljesítette a lerakási minimumot, minden sorra kerülése alkalmával – ha lehetősége van rá – újabb, szabályos lapcsoportot tehet az asztalra, illetve kiegészítheti a már lerakott kombinációkat.
 
@@ -74,10 +63,8 @@ A játékos szúrással szerezhet dzsókert is az asztalról az alábbiak szerin
 Véget ér a játék, ha az egyik résztvevő valamennyi kártyáját szabályos kombinációkban asztalra terítette és az utolsó lapot a dobó halomba rakta. A játék befejezéséhez csak handolásnál használható fel utolsó húzott kártyaként a cserelap.
 Elszámolás
 
-A lapjait elfogyasztó személy megnyeri a játékot. Ezért (-) 10 pontot írhat. A többiek a kezükben maradt kártyák értékeinek összes pontszámát írják fel (+) előjellel. Aki a játszma során nem volt képes kombinációkat az asztalra tenni, (+) 100 pontot ír. Handolásnál a nyertes (-) 20 pontot ír, társai a kiszámolt pontok kétszeresét, illetve (+) 200 pontot. Szúró handnál nem érvényesül a kétszeres szabály, a nyertes is csak -10 pontot kap.
+A lapjait elfogyasztó személy megnyeri a játékot. Ezért (-) 20 pontot írhat. A többiek a kezükben maradt kártyák értékeinek összes pontszámát írják fel (+) előjellel. Aki a játszma során nem volt képes kombinációkat az asztalra tenni, (+) 100 pontot ír. Handolásnál a nyertes (-) 40 pontot ír, társai a kiszámolt pontok kétszeresét, illetve (+) 200 pontot. Szúró handnál nem érvényesül a kétszeres szabály, a nyertes is csak -20 pontot kap.
 
-A kártyák értéke a végső elszámolásnál: Ász: 11 pont. Király, dáma és bubi: 10 pont. A számozott lapokat a rajtuk lévő értékkel kell számolni, a dzsóker pedig 15 pontot ér.
+A kártyák értéke a végső elszámolásnál: Ász: 11 pont. Király, dáma és bubi: 10 pont. A számozott lapokat a rajtuk lévő értékkel kell számolni, a dzsóker pedig 15 pontot ér.[1]
 
 Az osztásonként elért eredményeket a játékvezető papírra jegyzi, és folyamatosan összesíti. A 7, 9 vagy 10 osztásból álló partit az a játékos nyeri, aki a legkevesebb pontot gyűjtötte. Szokás a römit pénzre is játszani. Osztásonként vagy partinként fizetnek a vesztesek a nyertesnek.
-
-source: https://hu.wikipedia.org/wiki/R%C3%B6mi

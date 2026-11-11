@@ -1,0 +1,5 @@
+card back: David Bellot - Berkeley, CA, USA 08/12/2005 - David's web, LGPL <http://www.gnu.org/licenses/lgpl.html>, via Wikimedia Commons
+card front: Byron Knoll's SVG deck https://code.google.com/archive/p/vector-playing-cards/downloads
+title font: Rooster by Billy Argel https://www.dafont.com/rooster.font
+background: https://www.pexels.com/photo/playing-cards-2508565/
+default profile image: https://www.vecteezy.com/vector-art/49044753-person-and-user-profile-icon-for-identity-and-representation

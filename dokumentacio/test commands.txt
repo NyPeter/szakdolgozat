@@ -1,0 +1,5 @@
+_socket.emit('game:devPreset', { preset: 'handolas' }, console.log)
+_socket.emit('game:devPreset', { preset: 'szuroHand' }, console.log)
+_socket.emit('game:devPreset', { preset: 'jokerSwap' }, console.log)
+_socket.emit('game:devPreset', { preset: 'cserelapSwap' }, console.log)
+_socket.emit('game:devPreset', { preset: 'cserelapHandolas' }, console.log)
