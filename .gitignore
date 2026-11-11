@@ -130,3 +130,7 @@ dist
 .pnp.*
 
 /program/backend/database
+
+# User-uploaded avatars: keep only the default image
+/program/backend/uploads/*
+!/program/backend/uploads/default_avatar.jpg
