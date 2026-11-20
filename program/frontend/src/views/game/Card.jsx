@@ -28,10 +28,11 @@ function cardSrc(card) {
 //   selected  – blue tint + lift, used for meld selection in Step 3
 //   mustUse   – gold border glow, marks the discard-pile card the player
 //               must use in a meld before they are allowed to discard
+//   isNew     – green outline and "Új" label, marks the card drawn this turn
 //   onClick   – enables pointer cursor and hover lift animation
 //   style     – forwarded to the outer wrapper (use for width/height overrides)
 export function Card({
-  card, faceDown = false, selected = false, mustUse = false, onClick, style,
+  card, faceDown = false, selected = false, mustUse = false, isNew = false, onClick, style,
 }) {
   const src = faceDown ? '/Card_back.svg' : (card ? cardSrc(card) : null);
   if (!src) return null;
@@ -55,6 +56,8 @@ export function Card({
       {/* Tint overlays sit above the image and are invisible to pointer events */}
       {selected && <div className="card-overlay card-overlay-selected" />}
       {mustUse && <div className="card-overlay card-overlay-must-use" />}
+      {isNew && <div className="card-overlay card-overlay-new" />}
+      {isNew && <span className="card-new-label">Új</span>}
     </div>
   );
 }

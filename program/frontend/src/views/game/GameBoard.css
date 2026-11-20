@@ -305,6 +305,25 @@
   box-shadow: inset 0 0 0 2px #f39c12;
 }
 
+/* Green inset ring + corner label for the card drawn this turn */
+.card-overlay-new {
+  box-shadow: inset 0 0 0 2px #27ae60;
+}
+
+.card-new-label {
+  position: absolute;
+  top: -8px;
+  right: 3px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: #27ae60;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 16px;
+  pointer-events: none;
+}
+
 .card-clickable {
   cursor: pointer;
 }

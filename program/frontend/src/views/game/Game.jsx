@@ -2,6 +2,7 @@ import React, {
   useEffect, useRef, useState,
 } from 'react';
 import { useParams, useNavigate } from 'react-router';
+import axios from 'axios';
 import {
   Button, Container, ListGroup, Modal, Spinner, Form, InputGroup,
 } from 'react-bootstrap';
@@ -13,21 +14,12 @@ import './Game.css';
 
 const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-function decodeUserId() {
-  try {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return null;
-    return JSON.parse(atob(token.split('.')[1])).id;
-  } catch {
-    return null;
-  }
-}
-
 export const Game = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const gameId = Number(id);
-  const userId = decodeUserId();
+  // The logged-in user's id, from GET /user like the other pages.
+  const [userId, setUserId] = useState(null);
 
   const joinedGameIdRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -58,6 +50,13 @@ export const Game = () => {
   const playerNames = Object.fromEntries(
     (room?.players ?? []).map((p) => [String(p.id), p.name]),
   );
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    axios.get(`${api}/user`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(({ data }) => setUserId(data.user.id))
+      .catch(() => navigate('/Login'));
+  }, []);
 
   // Warn before tab close during active game
   useEffect(() => {
@@ -250,7 +249,7 @@ export const Game = () => {
     );
   }
 
-  if (!room) {
+  if (!room || userId === null) {
     return (
       <Container className="game-room-container">
         <Spinner animation="border" variant="light" />

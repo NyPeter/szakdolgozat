@@ -23,10 +23,10 @@ export function RoundOver({ data, playerNames, onDismiss }) {
       <div className="go-box">
         <h3 className="go-title">
           {data.round}. kör vége
-          {data.isHandolas && !data.isSzuroHand && (
+          {data.isGoOutFromHand && !data.isGoOutFromHandWithLayOff && (
             <Badge bg="warning" text="dark" className="ms-2">Handolás!</Badge>
           )}
-          {data.isSzuroHand && (
+          {data.isGoOutFromHandWithLayOff && (
             <Badge bg="info" className="ms-2">Szúró hand!</Badge>
           )}
         </h3>

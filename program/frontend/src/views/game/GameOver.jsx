@@ -49,12 +49,12 @@ export function GameOver({ data, playerNames, onClose }) {
           </tbody>
         </table>
 
-        {data.lastRound?.isHandolas && !data.lastRound?.isSzuroHand && (
+        {data.lastRound?.isGoOutFromHand && !data.lastRound?.isGoOutFromHandWithLayOff && (
           <p className="go-badge-note">
             <Badge bg="warning" text="dark">Handolás</Badge> az utolsó körben!
           </p>
         )}
-        {data.lastRound?.isSzuroHand && (
+        {data.lastRound?.isGoOutFromHandWithLayOff && (
           <p className="go-badge-note">
             <Badge bg="info">Szúró hand</Badge> az utolsó körben!
           </p>

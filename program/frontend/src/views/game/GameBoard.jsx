@@ -85,6 +85,11 @@ export function GameBoard({ room, gameState: gs, userId }) {
     room.players.map((p) => [String(p.id), p.avatarURL ?? null]),
   );
 
+  // Cserelap rules: it can be drawn (as the last card for handolás) until the
+  // player's first meld, and swapped only in the first draw round after dealing.
+  const canDrawSwapCard = !!gs.swapCard && !gs.hasFirstMeld?.[myId];
+  const canExchangeSwapCard = canDrawSwapCard && gs.isFirstTurn;
+
   const opponents = gs.players.filter((id) => String(id) !== myId);
   const surrendered = gs.surrenderedPlayers ?? [];
 
@@ -125,9 +130,9 @@ export function GameBoard({ room, gameState: gs, userId }) {
     emit('game:draw', { source: 'discard' });
   }
 
-  function handleCserelapClick() {
-    if (!isMyTurn || gs.phase !== 'draw' || !gs.cserelap || gs.hasFirstMeld?.[myId]) return;
-    emit('game:draw', { source: 'cserelap' });
+  function handleSwapCardClick() {
+    if (!isMyTurn || gs.phase !== 'draw' || !canDrawSwapCard) return;
+    emit('game:draw', { source: 'swapCard' });
   }
 
   function handleCardClick(card) {
@@ -150,10 +155,10 @@ export function GameBoard({ room, gameState: gs, userId }) {
     setSelectedCards(new Set());
   }
 
-  function handleCserelapSwap() {
-    if (!isMyTurn || gs.phase !== 'discard' || !gs.cserelap || selectedCards.size !== 1) return;
+  function handleExchangeSwapCard() {
+    if (!isMyTurn || gs.phase !== 'discard' || !canExchangeSwapCard || selectedCards.size !== 1) return;
     const [cardId] = selectedCards;
-    emit('game:cserelapSwap', { giveCardId: cardId }, clearSelections);
+    emit('game:exchangeSwapCard', { giveCardId: cardId }, clearSelections);
   }
 
   function handleMeld() {
@@ -178,11 +183,11 @@ export function GameBoard({ room, gameState: gs, userId }) {
     setTargetMeldId((prev) => (prev === meldId ? null : meldId));
   }
 
-  function handleSzuras() {
+  function handleLayOff() {
     if (!isMyTurn || gs.phase !== 'discard') return;
     if (targetMeldId === null || selectedCards.size !== 1) return;
     const [cardId] = selectedCards;
-    emit('game:szuras', { meldId: targetMeldId, cardId }, clearSelections);
+    emit('game:layOff', { meldId: targetMeldId, cardId }, clearSelections);
   }
 
   function handleJokerClick(meldId, jokerId) {
@@ -211,25 +216,26 @@ export function GameBoard({ room, gameState: gs, userId }) {
     emit('game:undoDraw', {});
   }
 
-  function handleHandolasBid() {
-    emit('game:handolasBid', {});
+  function handleGoOutFromHandBid() {
+    emit('game:goOutFromHandBid', {});
   }
 
   // ── Status message ─────────────────────────────────────────────────────
   function statusText() {
     if (!isMyTurn) return `${playerNames[currentPlayerId] ?? '?'} lép...`;
     if (gs.phase === 'draw') {
-      const cserelapHint = gs.cserelap ? ' vagy vedd fel a cserelapot (handoláshoz)' : '';
-      return `Húzz lapot a talonból vagy a dobóhalomból${cserelapHint}`;
+      const swapCardHint = canDrawSwapCard ? ' vagy vedd fel a cserelapot (handoláshoz)' : '';
+      return `Húzz lapot a talonból vagy a dobóhalomból${swapCardHint}`;
     }
     if (jokerSwapTarget) return 'Válassz lapot a kezedből a dzsóker cseréjéhez';
     if (targetMeldId !== null) return 'Válassz egy lapot a kezedből, majd nyomj Szúrást';
     if (gs.swappedJoker) return 'Használd fel a megszerzett dzsókert (tedd le kombinációba)';
     if (gs.discardDrawnCard) return 'Használd fel a dobóhalomból felvett lapot, majd dobj el egyet';
-    if (gs.cserelapDrawn) return 'Fejezd be a handolást (rakd le a lapjaid), vagy vonj vissza';
-    if (gs.handolasBid?.[myId]) return 'Handolás: szúrj be minden szükséges lapot, majd dobj el az utolsót';
+    if (gs.swapCardDrawn) return 'Fejezd be a handolást (rakd le a lapjaid), vagy vonj vissza';
+    if (gs.goOutFromHandBid?.[myId]) return 'Handolás: szúrj be minden szükséges lapot, majd dobj el az utolsót';
     if (gs.firstMeldTurnPlayer === myId) return 'Leraktad az első kombinációd — jelezd a handolást, vagy dobj el egy lapot';
-    return 'Rakj le kombinációkat, cseréld a cserelapot, szúrj, vagy dobj el egy lapot';
+    if (canExchangeSwapCard) return 'Rakj le kombinációkat, cseréld a cserelapot, szúrj, vagy dobj el egy lapot';
+    return 'Rakj le kombinációkat, szúrj, vagy dobj el egy lapot';
   }
 
   // ── Render ─────────────────────────────────────────────────────────────
@@ -327,16 +333,16 @@ export function GameBoard({ room, gameState: gs, userId }) {
         <div className="gb-pile">
           <div className="gb-pile-label">
             Cserelap
-            {gs.cserelap && isMyTurn && gs.phase === 'draw' && (
+            {canDrawSwapCard && isMyTurn && gs.phase === 'draw' && (
               <span style={{ fontSize: '0.6rem', opacity: 0.7 }}>
                 (handoláshoz)
               </span>
             )}
           </div>
-          {gs.cserelap ? (
+          {gs.swapCard ? (
             <Card
-              card={gs.cserelap}
-              onClick={isMyTurn && gs.phase === 'draw' && !gs.hasFirstMeld?.[myId] ? handleCserelapClick : undefined}
+              card={gs.swapCard}
+              onClick={isMyTurn && gs.phase === 'draw' && canDrawSwapCard ? handleSwapCardClick : undefined}
             />
           ) : (
             <div className="gb-pile-empty">–</div>
@@ -456,7 +462,7 @@ export function GameBoard({ room, gameState: gs, userId }) {
           {selectedCards.size === 1
             && targetMeldId !== null
             && jokerSwapTarget === null && (
-            <Button variant="info" size="sm" onClick={handleSzuras}>
+            <Button variant="info" size="sm" onClick={handleLayOff}>
               Szúrás
             </Button>
           )}
@@ -468,28 +474,27 @@ export function GameBoard({ room, gameState: gs, userId }) {
           )}
 
           {selectedCards.size === 1
-            && gs.cserelap
-            && !gs.hasFirstMeld?.[myId]
+            && canExchangeSwapCard
             && targetMeldId === null
             && jokerSwapTarget === null
             && pendingGroups.length === 0 && (
-            <Button variant="outline-info" size="sm" onClick={handleCserelapSwap}>
+            <Button variant="outline-info" size="sm" onClick={handleExchangeSwapCard}>
               Cserelap csere
             </Button>
           )}
 
-          {gs.firstMeldTurnPlayer === myId && !gs.handolasBid?.[myId] && (
-            <Button variant="outline-primary" size="sm" onClick={handleHandolasBid}>
+          {gs.firstMeldTurnPlayer === myId && !gs.goOutFromHandBid?.[myId] && (
+            <Button variant="outline-primary" size="sm" onClick={handleGoOutFromHandBid}>
               Handolás befejezés
             </Button>
           )}
-          {gs.handolasBid?.[myId] && (
-            <Button variant="primary" size="sm" onClick={handleHandolasBid}>
+          {gs.goOutFromHandBid?.[myId] && (
+            <Button variant="primary" size="sm" onClick={handleGoOutFromHandBid}>
               Kéz visszavonás
             </Button>
           )}
 
-          {(gs.discardDrawnCard || gs.cserelapDrawn) && (
+          {(gs.discardDrawnCard || gs.swapCardDrawn) && (
             <Button variant="outline-warning" size="sm" onClick={handleUndoDraw}>
               Visszavonás
             </Button>
@@ -539,6 +544,7 @@ export function GameBoard({ room, gameState: gs, userId }) {
                 card={card}
                 selected={selectedCards.has(card.id)}
                 mustUse={isMustUse}
+                isNew={gs.drawnCardId === card.id}
                 onClick={() => handleCardClick(card)}
               />
             );
