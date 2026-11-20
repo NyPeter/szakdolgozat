@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Button, Container, Table, Form, InputGroup } from 'react-bootstrap';
+import {
+  Alert, Button, Container, Table, Form, InputGroup,
+} from 'react-bootstrap';
 import axios from 'axios';
 import { useNavigate } from 'react-router';
 
@@ -10,7 +12,7 @@ function formatDate(iso) {
   return d.toLocaleDateString('hu-HU');
 }
 
-function ActionCell({ userId, field, currentValue, onDone }) {
+function ActionCell({ userId, field, currentValue, onDone, onError }) {
   const [days, setDays] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,11 +24,12 @@ function ActionCell({ userId, field, currentValue, onDone }) {
 
   const send = async (daysValue) => {
     setLoading(true);
+    onError('');
     try {
       await axios.put(endpoint, { days: daysValue }, { headers });
       onDone();
     } catch (err) {
-      alert(err.response?.data?.message || 'Hiba történt.');
+      onError(err.response?.data?.message ?? 'Nem sikerült elérni a szervert, próbáld újra.');
     } finally {
       setLoading(false);
       setDays('');
@@ -38,7 +41,7 @@ function ActionCell({ userId, field, currentValue, onDone }) {
   return (
     <div className="d-flex flex-column gap-1">
       <small className="text-muted">{formatDate(currentValue)}</small>
-      <InputGroup size="sm" style={{ width: 180 }}>
+      <InputGroup size="sm" style={{ width: 240 }}>
         <Form.Control
           type="number"
           min={1}
@@ -52,7 +55,7 @@ function ActionCell({ userId, field, currentValue, onDone }) {
           disabled={loading || !days || Number(days) < 1}
           onClick={() => send(Number(days))}
         >
-          Set
+          Beállítás
         </Button>
         <Button
           variant="outline-danger"
@@ -68,7 +71,7 @@ function ActionCell({ userId, field, currentValue, onDone }) {
             disabled={loading}
             onClick={() => send(0)}
           >
-            Lift
+            Feloldás
           </Button>
         )}
       </InputGroup>
@@ -82,6 +85,7 @@ export const Admin = () => {
   const [pages, setPages] = useState(1);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [actionError, setActionError] = useState('');
   const navigate = useNavigate();
 
   const token = localStorage.getItem('accessToken');
@@ -133,6 +137,12 @@ export const Admin = () => {
         )}
       </Form>
 
+      {actionError && (
+        <Alert variant="danger" dismissible onClose={() => setActionError('')}>
+          {actionError}
+        </Alert>
+      )}
+
       <Table bordered hover responsive size="sm">
         <thead>
           <tr>
@@ -156,6 +166,7 @@ export const Admin = () => {
                     field="suspend"
                     currentValue={u.suspendedUntil}
                     onDone={() => fetchUsers(page, search)}
+                    onError={setActionError}
                   />
                 )}
               </td>
@@ -166,6 +177,7 @@ export const Admin = () => {
                     field="mute"
                     currentValue={u.mutedUntil}
                     onDone={() => fetchUsers(page, search)}
+                    onError={setActionError}
                   />
                 )}
               </td>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Container, Form, Button, Spinner, Modal } from "react-bootstrap";
+import { Alert, Container, Form, Button, Spinner, Modal } from "react-bootstrap";
 import "./Profile.css";
 
 export const Profile = () => {
@@ -23,6 +23,18 @@ export const Profile = () => {
 
   const [avatarError, setAvatarError] = useState("");
   const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+  // Result of the last action, shown under the section it belongs to:
+  // { section: 'avatar' | 'profile' | 'password' | 'delete', variant: 'success' | 'danger', text }
+  const [notice, setNotice] = useState(null);
+  const showError = (section, err, fallback) => setNotice({
+    section, variant: "danger", text: err.response?.data?.message ?? fallback,
+  });
+  const renderNotice = (section) => notice?.section === section && (
+    <Alert variant={notice.variant} className="mt-2" dismissible onClose={() => setNotice(null)}>
+      {notice.text}
+    </Alert>
+  );
 
 
   const token = localStorage.getItem("accessToken");
@@ -56,6 +68,7 @@ export const Profile = () => {
   }, []);
 
   const saveProfile = async () => {
+    setNotice(null);
     try {
       const payload = {
         name: editData.name,
@@ -67,14 +80,15 @@ export const Profile = () => {
       });
 
       setUser(data);
-      alert("Profil frissítve!");
+      setNotice({ section: "profile", variant: "success", text: "A profil frissült." });
     } catch (err) {
       console.error("Update error:", err);
-      alert("Hiba történt a frissítésnél.");
+      showError("profile", err, "Nem sikerült elérni a szervert, próbáld újra.");
     }
   };
 
   const savePassword = async () => {
+    setNotice(null);
     try {
       const payload = {
         currentPassword: editData.currentPassword,
@@ -84,10 +98,11 @@ export const Profile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      alert(data.message);
+      setEditData((prev) => ({ ...prev, currentPassword: "", newPassword: "" }));
+      setNotice({ section: "password", variant: "success", text: data.message });
     } catch (err) {
       console.error("Update error:", err);
-      alert("Hiba történt a frissítésnél.");
+      showError("password", err, "Nem sikerült elérni a szervert, próbáld újra.");
     }
   }
 
@@ -120,7 +135,11 @@ export const Profile = () => {
   };
 
   const uploadAvatar = async () => {
-    if (!avatarFile) return alert("Nincs kiválasztott kép.");
+    setNotice(null);
+    if (!avatarFile) {
+      setNotice({ section: "avatar", variant: "danger", text: "Nem választottál ki képet." });
+      return;
+    }
 
     const formData = new FormData();
     formData.append("file", avatarFile);
@@ -136,14 +155,15 @@ export const Profile = () => {
       setUser((prev) => ({ ...prev, avatarURL: data.avatarURL }));
       setAvatarVersion(Date.now());     // <-- force fresh image URL
 
-      alert("Avatar frissítve!");
+      setNotice({ section: "avatar", variant: "success", text: "Az avatar frissült." });
     } catch (err) {
       console.error("Avatar upload error:", err);
-      alert("Hiba történt a kép feltöltése során.");
+      showError("avatar", err, "Nem sikerült elérni a szervert, próbáld újra.");
     }
   };
 
   const deleteAccount = async () => {
+    setNotice(null);
     try {
       await axios.delete(`${api}/user`, {
         data: { password: deletePassword },
@@ -154,7 +174,7 @@ export const Profile = () => {
       window.location.href = "/";
     } catch (err) {
       console.error("Delete error:", err);
-      alert("Nem sikerült törölni a fiókot.");
+      showError("delete", err, "Nem sikerült elérni a szervert, próbáld újra.");
     }
   };
 
@@ -194,6 +214,7 @@ export const Profile = () => {
           <Button variant="success" className="mt-2" onClick={uploadAvatar} disabled={!avatarFile || avatarError}>
             Avatar feltöltése
           </Button>
+          {renderNotice("avatar")}
         </Form.Group>
       </div>
 
@@ -219,6 +240,7 @@ export const Profile = () => {
         <Button variant="success" className="mt-3" onClick={saveProfile}>
           Mentés
         </Button>
+        {renderNotice("profile")}
 
         <Form.Group className="mt-3">
           <Form.Label>Jelenlegi jelszó</Form.Label>
@@ -243,8 +265,9 @@ export const Profile = () => {
         </Form.Group>
 
         <Button variant="success" className="mt-3" onClick={savePassword}>
-          Jelszó változatása
+          Jelszó módosítása
         </Button>
+        {renderNotice("password")}
       </Form>
 
       <Button variant="outline-danger" onClick={() => setShowDeleteModal(true)}>
@@ -263,6 +286,7 @@ export const Profile = () => {
             value={deletePassword}
             onChange={(e) => setDeletePassword(e.target.value)}
           />
+          {renderNotice("delete")}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
