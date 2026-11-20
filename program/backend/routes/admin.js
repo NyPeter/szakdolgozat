@@ -6,13 +6,12 @@ const msg = require('../utils/messages');
 const { User } = db;
 
 module.exports = async (fastify) => {
+  // Admin rights are read from the database, not from the token, so revoking
+  // them takes effect immediately.
   fastify.addHook('preHandler', async (request, reply) => {
-    try {
-      await request.jwtVerify();
-    } catch {
-      return reply.status(401).send({ message: msg.UNAUTHORIZED });
-    }
-    if (!request.user.isAdmin) {
+    await fastify.auth(request, reply);
+    if (reply.sent) return reply;
+    if (!request.currentUser.isAdmin) {
       return reply.status(403).send({ message: msg.FORBIDDEN });
     }
     return undefined;

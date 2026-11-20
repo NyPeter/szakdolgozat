@@ -11,6 +11,7 @@ const fastifyIO = require('fastify-socket.io');
 const { initSocket } = require('./socket/index.js');
 const db = require('./models');
 const msg = require('./utils/messages');
+const { loadCurrentUser } = require('./utils/currentUser');
 
 const port = process.env.PORT || 4000;
 const secret = process.env.JWT_SECRET || 'secret';
@@ -47,6 +48,9 @@ fastify.decorate('auth', async (request, reply) => {
   } catch {
     return reply.status(401).send({ message: msg.UNAUTHORIZED });
   }
+  const { user, status, message } = await loadCurrentUser(request.user.id);
+  if (!user) return reply.status(status).send({ message });
+  request.currentUser = user;
   return undefined;
 });
 

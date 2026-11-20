@@ -7,11 +7,11 @@
 // DELETE THIS FILE before production.
 
 const PRESETS = {
-  // ── handolás ────────────────────────────────────────────────────────────────
+  // ── handolás (go out from hand) ─────────────────────────────────────────────
   // Hand: [3♣ 3♦ 3♥]. Draw anything → 4 cards.
   // Lay the three 3s as a set (51pt min waived: 3 >= 4-1).
   // Discard the drawn card → handolás win.
-  handolas(gs, userId) {
+  goOutFromHand(gs, userId) {
     gs.hands[userId] = [
       { id: 9900, suit: 'clubs', rank: '3', value: 3 },
       { id: 9901, suit: 'diamonds', rank: '3', value: 3 },
@@ -20,13 +20,13 @@ const PRESETS = {
     gs.phase = 'draw';
   },
 
-  // ── szúró hand ──────────────────────────────────────────────────────────────
+  // ── szúró hand (go out from hand with a lay-off) ────────────────────────────
   // Table gets a hearts run [8♥ 9♥ 10♥].
   // Hand: [J♣ J♦ J♠  Q♣ Q♦ Q♠  J♥]. Draw anything → 8 cards.
   // 1. Lay [J♣ J♦ J♠] + [Q♣ Q♦ Q♠] as two sets (60pts ≥ 51).
   // 2. Szúrás J♥ onto the hearts run.
   // 3. Discard the drawn card → szúró hand win (handolás + szúrás).
-  szuroHand(gs, userId) {
+  goOutFromHandWithLayOff(gs, userId) {
     gs.melds.push({
       id: gs.meldCounter,
       playerId: 'dev',
@@ -81,12 +81,14 @@ const PRESETS = {
     gs.phase = 'discard';
   },
 
-  // ── cserelap swap (role 1) ───────────────────────────────────────────────────
-  // Cserelap = A♠. Already in discard phase.
-  // Select one card → game:cserelapSwap → trade it for the Ace.
-  // Still need to discard after the swap.
-  cserelapSwap(gs, userId) {
-    gs.cserelap = { id: 9920, suit: 'spades', rank: 'Ace', value: 11 };
+  // ── cserelap (swap card) exchange (role 1) ───────────────────────────────────
+  // Swap card = A♠. Already in discard phase, inside the first draw round
+  // (the only time the exchange is allowed).
+  // Select one card → game:exchangeSwapCard → trade it for the Ace.
+  // Still need to discard after the exchange.
+  swapCardExchange(gs, userId) {
+    gs.isFirstTurn = true;
+    gs.swapCard = { id: 9920, suit: 'spades', rank: 'Ace', value: 11 };
     gs.hands[userId] = [
       { id: 9900, suit: 'clubs', rank: 'King', value: 10 },
       { id: 9901, suit: 'diamonds', rank: 'Queen', value: 10 },
@@ -98,13 +100,13 @@ const PRESETS = {
     gs.phase = 'discard';
   },
 
-  // ── cserelap handolás (role 2) ────────────────────────────────────────────────
-  // Cserelap = 3♥. Hand: [3♣ 3♦ 7♠]. In draw phase.
-  // game:draw source='cserelap' → hand becomes [3♣ 3♦ 7♠ 3♥], cserelapDrawn set.
+  // ── cserelap (swap card) as the last card for handolás (role 2) ──────────────
+  // Swap card = 3♥. Hand: [3♣ 3♦ 7♠]. In draw phase.
+  // game:draw source='swapCard' → hand becomes [3♣ 3♦ 7♠ 3♥], swapCardDrawn set.
   // Lay [3♣ 3♦ 3♥] as set (min waived: 3 >= 4-1).
   // Discard 7♠ → handolás win.
-  cserelapHandolas(gs, userId) {
-    gs.cserelap = { id: 9920, suit: 'hearts', rank: '3', value: 3 };
+  swapCardGoOut(gs, userId) {
+    gs.swapCard = { id: 9920, suit: 'hearts', rank: '3', value: 3 };
     gs.hands[userId] = [
       { id: 9900, suit: 'clubs', rank: '3', value: 3 },
       { id: 9901, suit: 'diamonds', rank: '3', value: 3 },

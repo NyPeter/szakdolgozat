@@ -2,6 +2,12 @@
 /* eslint-disable jsdoc/require-jsdoc */
 /* eslint-disable no-param-reassign */
 
+// Game terms: the code uses English names for the Hungarian rummy terms.
+//   swapCard      – cserelap (handlap): the face-up card under the deck
+//   goOutFromHand – handolás: going out in one turn straight from the hand
+//                   ("kézből történő befejezés"), without an earlier meld
+//   layOff        – szúrás: adding a card from the hand to a meld on the table
+
 // Canonical rank sequence: index 0 = '2', index 12 = 'Ace' (high position).
 // For A-2-3 runs, Ace is temporarily treated as index -1 (see canFormRun).
 const RANK_ORDER = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'];
@@ -42,13 +48,13 @@ function shuffle(deck) {
 }
 
 function dealCards(deck, playerIds) {
-  const cserelap = deck.pop();
+  const swapCard = deck.pop();
   const hands = {};
   playerIds.forEach((id, index) => {
     const count = index === 0 ? 15 : 14;
     hands[id] = deck.splice(0, count);
   });
-  return { hands, drawPile: deck, cserelap };
+  return { hands, drawPile: deck, swapCard };
 }
 
 function initGameState(playerIds, roundNumber) {
@@ -59,7 +65,7 @@ function initGameState(playerIds, roundNumber) {
   ];
 
   const deck = shuffle(createDeck(playerIds.length));
-  const { hands, drawPile, cserelap } = dealCards(deck, rotated);
+  const { hands, drawPile, swapCard } = dealCards(deck, rotated);
 
   return {
     players: rotated,
@@ -68,29 +74,31 @@ function initGameState(playerIds, roundNumber) {
     hands,
     drawPile,
     discardPile: [],
-    cserelap,
+    swapCard,
     isFirstTurn: true,
     discardDrawnCard: null,
-    // Where the current player drew from this turn: 'deck' | 'discard' | 'cserelap' | null.
+    // Where the current player drew from this turn: 'deck' | 'discard' | 'swapCard' | null.
     drawSource: null,
+    // Id of the card drawn this turn, so the drawer's client can mark it.
+    drawnCardId: null,
     melds: [],
     // Auto-increment counter used to assign stable IDs to each laid meld.
     meldCounter: 0,
     // Tracks a joker taken from a table meld via szúrás. It must be immediately
     // placed into another meld or szúrás this turn before the player may discard.
     swappedJoker: null,
-    cserelapDrawn: null,
+    swapCardDrawn: null,
     // Set to the userId who first laid their game-first meld THIS turn (cleared on turn advance).
     // Used to detect handolás: if the winner's
     // firstMeldTurnPlayer matches, they went out in one shot.
     firstMeldTurnPlayer: null,
-    // Set to true the first time game:szuras is called in the current turn (cleared on advance).
-    usedSzurasThisTurn: false,
+    // Set to true the first time game:layOff is called in the current turn (cleared on advance).
+    usedLayOffThisTurn: false,
     // Per-player flag: true when the player declared a handolás finish intention this turn.
-    // Enables szúrás on the first-meld turn. Cleared (with revert) via game:handolasBid.
-    handolasBid: Object.fromEntries(rotated.map((id) => [id, false])),
+    // Enables szúrás on the first-meld turn. Cleared (with revert) via game:goOutFromHandBid.
+    goOutFromHandBid: Object.fromEntries(rotated.map((id) => [id, false])),
     // Ordered log of szúrás ops made under the handolás bid this turn, used for revert.
-    szurasHistory: [],
+    layOffHistory: [],
     round: roundNumber,
     hasFirstMeld: Object.fromEntries(rotated.map((id) => [id, false])),
   };
@@ -116,15 +124,20 @@ function getPlayerView(gameState, userId) {
     drawPile: { remaining: gameState.drawPile.length },
     discardTop: discardPile.length > 0 ? discardPile[discardPile.length - 1] : null,
     discardCount: discardPile.length,
-    cserelap: gameState.cserelap,
+    swapCard: gameState.swapCard,
     melds: gameState.melds,
     isFirstTurn: gameState.isFirstTurn,
     hasFirstMeld: gameState.hasFirstMeld,
     firstMeldTurnPlayer: gameState.firstMeldTurnPlayer,
-    handolasBid: gameState.handolasBid,
+    goOutFromHandBid: gameState.goOutFromHandBid,
     discardDrawnCard: gameState.discardDrawnCard,
-    cserelapDrawn: gameState.cserelapDrawn,
+    swapCardDrawn: gameState.swapCardDrawn,
     swappedJoker: gameState.swappedJoker,
+    // A card drawn from the deck is hidden information: only the drawer learns
+    // which card in their hand is the new one.
+    drawnCardId: String(gameState.players[gameState.turnIndex]) === String(userId)
+      ? gameState.drawnCardId
+      : null,
   };
 }
 
@@ -368,10 +381,10 @@ function canSwapJokerInMeld(meld, naturalCard, jokerId) {
 // (hasFirstMeld[id] is still false when the round ends).
 // Non-layers write a flat penalty that replaces the hand-value calculation.
 // Hand card values: number cards face value, J/Q/K = 10, Ace = 11, Joker = 15.
-function calculateRoundScores(gs, winnerId, isHandolas, isSzuroHand) {
+function calculateRoundScores(gs, winnerId, isGoOutFromHand, isGoOutFromHandWithLayOff) {
   const scores = {};
   const winner = String(winnerId);
-  const doubles = isHandolas && !isSzuroHand;
+  const doubles = isGoOutFromHand && !isGoOutFromHandWithLayOff;
   // eslint-disable-next-line no-restricted-syntax
   for (const playerId of gs.players) {
     const strId = String(playerId);

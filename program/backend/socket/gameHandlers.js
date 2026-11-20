@@ -46,13 +46,14 @@ function advanceTurn(gs, surrendered) {
 function endTurn(gs, userId, surrendered) {
   advanceTurn(gs, surrendered);
   gs.discardDrawnCard = null;
-  gs.cserelapDrawn = null;
+  gs.swapCardDrawn = null;
   gs.swappedJoker = null;
   gs.drawSource = null;
+  gs.drawnCardId = null;
   gs.firstMeldTurnPlayer = null;
-  gs.usedSzurasThisTurn = false;
-  gs.handolasBid[userId] = false;
-  gs.szurasHistory = [];
+  gs.usedLayOffThisTurn = false;
+  gs.goOutFromHandBid[userId] = false;
+  gs.layOffHistory = [];
 }
 
 // Draws the top card of the deck into the player's hand. When the deck is empty,
@@ -68,6 +69,7 @@ function drawFromDeck(gs, userId) {
   const card = gs.drawPile.pop();
   gs.hands[userId].push(card);
   gs.drawSource = 'deck';
+  gs.drawnCardId = card.id;
   return card;
 }
 
@@ -78,8 +80,8 @@ function hasPendingObligation(gs, userId) {
   const inHand = (card) => !!card && hand.some((c) => c.id === card.id);
   return inHand(gs.discardDrawnCard)
     || inHand(gs.swappedJoker)
-    || !!gs.cserelapDrawn
-    || (gs.handolasBid[userId] && gs.szurasHistory.length > 0);
+    || !!gs.swapCardDrawn
+    || (gs.goOutFromHandBid[userId] && gs.layOffHistory.length > 0);
 }
 
 // ── Turn timer ────────────────────────────────────────────────────────────────
@@ -108,7 +110,7 @@ async function handleTimeout(io, gameId) {
     return;
   }
 
-  // A half-finished turn (unused discard/cserelap draw, unused swapped joker,
+  // A half-finished turn (unused discard/swapCard draw, unused swapped joker,
   // unfinished handolás) is rolled back to how the turn started.
   if (hasPendingObligation(gs, userId)) restoreTurnSnapshot(gameId, gs);
 
@@ -190,13 +192,18 @@ async function handleRoundEnd(io, gameRoomId, gs, roundWinnerId) {
 
   // Player ids are compared as strings everywhere in the game state.
   const winnerId = String(roundWinnerId);
-  const isHandolas = gs.firstMeldTurnPlayer === winnerId;
-  const isSzuroHand = isHandolas && gs.usedSzurasThisTurn;
-  const roundScores = calculateRoundScores(gs, winnerId, isHandolas, isSzuroHand);
+  const isGoOutFromHand = gs.firstMeldTurnPlayer === winnerId;
+  const isGoOutFromHandWithLayOff = isGoOutFromHand && gs.usedLayOffThisTurn;
+  const roundScores = calculateRoundScores(
+    gs,
+    winnerId,
+    isGoOutFromHand,
+    isGoOutFromHandWithLayOff,
+  );
 
   const rd = gameRoundData.get(gameRoomId);
   rd.roundHistory.push({
-    round: rd.round, scores: roundScores, winnerId, isHandolas, isSzuroHand,
+    round: rd.round, scores: roundScores, winnerId, isGoOutFromHand, isGoOutFromHandWithLayOff,
   });
   // eslint-disable-next-line no-restricted-syntax
   for (const [pid, pts] of Object.entries(roundScores)) {
@@ -222,7 +229,7 @@ async function handleRoundEnd(io, gameRoomId, gs, roundWinnerId) {
       scores: rd.scores,
       roundHistory: rd.roundHistory,
       winnerId: String(gameWinnerId),
-      lastRound: { scores: roundScores, winnerId, isHandolas, isSzuroHand },
+      lastRound: { scores: roundScores, winnerId, isGoOutFromHand, isGoOutFromHandWithLayOff },
       surrenderedPlayers: rd.surrenderedPlayers,
     });
     clearGameMemory(gameRoomId);
@@ -233,8 +240,8 @@ async function handleRoundEnd(io, gameRoomId, gs, roundWinnerId) {
       scores: roundScores,
       totalScores: { ...rd.scores },
       winnerId,
-      isHandolas,
-      isSzuroHand,
+      isGoOutFromHand,
+      isGoOutFromHandWithLayOff,
     });
 
     rd.round += 1;
@@ -279,16 +286,18 @@ function registerInGameHandlers(io, socket) {
         // Only impose the use-obligation outside the free first-turn window.
         if (!gs.isFirstTurn) gs.discardDrawnCard = card;
         gs.drawSource = 'discard';
-      } else if (source === 'cserelap') {
-        if (!gs.cserelap) return callback({ error: msg.NO_CSERELAP });
+        gs.drawnCardId = card.id;
+      } else if (source === 'swapCard') {
+        if (!gs.swapCard) return callback({ error: msg.NO_SWAP_CARD });
         if (gs.hasFirstMeld[userId]) {
-          return callback({ error: msg.CSERELAP_AFTER_FIRST_MELD });
+          return callback({ error: msg.SWAP_CARD_AFTER_FIRST_MELD });
         }
-        const card = gs.cserelap;
+        const card = gs.swapCard;
         gs.hands[userId].push(card);
-        gs.cserelap = null;
-        gs.cserelapDrawn = card;
-        gs.drawSource = 'cserelap';
+        gs.swapCard = null;
+        gs.swapCardDrawn = card;
+        gs.drawSource = 'swapCard';
+        gs.drawnCardId = card.id;
       } else {
         return callback({ error: msg.INVALID_DRAW_SOURCE });
       }
@@ -304,11 +313,12 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:cserelapSwap ──────────────────────────────────────────────────────
-  // During the discard phase the player may trade one hand card for the cserelap.
-  // The given card becomes the new face-up cserelap; the old cserelap enters the
+  // ── game:exchangeSwapCard ──────────────────────────────────────────────────────
+  // Only in the first draw round after dealing ("Először az osztást követő
+  // húzáskörben cserélheti..."), the player may trade one hand card for the swapCard.
+  // The given card becomes the new face-up swapCard; the old swapCard enters the
   // player's hand. This does NOT end the turn — the player must still discard.
-  socket.on('game:cserelapSwap', async ({ giveCardId }, callback) => {
+  socket.on('game:exchangeSwapCard', async ({ giveCardId }, callback) => {
     try {
       const { gameRoomId } = socket;
       if (!gameRoomId) return callback({ error: msg.NOT_IN_ROOM });
@@ -318,11 +328,12 @@ function registerInGameHandlers(io, socket) {
         return callback({ error: msg.NOT_YOUR_TURN });
       }
       if (gs.phase !== 'discard') return callback({ error: msg.MUST_DRAW_FIRST });
-      if (!gs.cserelap) return callback({ error: msg.NO_CSERELAP });
+      if (!gs.swapCard) return callback({ error: msg.NO_SWAP_CARD });
+      if (!gs.isFirstTurn) return callback({ error: msg.SWAP_CARD_EXCHANGE_FIRST_ROUND_ONLY });
 
       const userId = String(socket.user.id);
       if (gs.hasFirstMeld[userId]) {
-        return callback({ error: msg.CSERELAP_AFTER_FIRST_MELD });
+        return callback({ error: msg.SWAP_CARD_AFTER_FIRST_MELD });
       }
       const hand = gs.hands[userId];
 
@@ -330,8 +341,8 @@ function registerInGameHandlers(io, socket) {
       if (giveIndex === -1) return callback({ error: msg.CARD_NOT_IN_HAND });
 
       const [given] = hand.splice(giveIndex, 1);
-      hand.push(gs.cserelap);
-      gs.cserelap = given;
+      hand.push(gs.swapCard);
+      gs.swapCard = given;
 
       await emitGameState(io, gameRoomId, gs);
       return callback({ ok: true });
@@ -375,13 +386,13 @@ function registerInGameHandlers(io, socket) {
       }
 
       // Cserelap was drawn: must complete handolás (empty hand), not just discard.
-      if (gs.cserelapDrawn && hand.length > 1) {
-        return callback({ error: msg.FINISH_CSERELAP_HANDOLAS });
+      if (gs.swapCardDrawn && hand.length > 1) {
+        return callback({ error: msg.FINISH_SWAP_CARD_GO_OUT });
       }
 
       // Szúrás made under a handolás bid only stands if the player goes out.
-      if (gs.handolasBid[userId] && gs.szurasHistory.length > 0 && hand.length > 1) {
-        return callback({ error: msg.FINISH_HANDOLAS_BID });
+      if (gs.goOutFromHandBid[userId] && gs.layOffHistory.length > 0 && hand.length > 1) {
+        return callback({ error: msg.FINISH_GO_OUT_FROM_HAND_BID });
       }
 
       const [card] = hand.splice(cardIndex, 1);
@@ -466,8 +477,8 @@ function registerInGameHandlers(io, socket) {
       // First-meld minimum: waived when the player is using all-or-all-but-one cards
       // (handolás bid — "kézből történő befejezésnél nem kötelező a lerakási minimum").
       if (!gs.hasFirstMeld[userId]) {
-        const isHandolasBid = usedIds.size >= hand.length - 1;
-        if (!isHandolasBid) {
+        const isGoOutFromHandBid = usedIds.size >= hand.length - 1;
+        if (!isGoOutFromHandBid) {
           const total = resolvedGroups.reduce((sum, g) => sum + meldValueForMinimum(g), 0);
           if (total < 51) {
             return callback({ error: msg.FIRST_MELD_MINIMUM(total) });
@@ -510,10 +521,10 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:szuras ────────────────────────────────────────────────────────────
+  // ── game:layOff ────────────────────────────────────────────────────────────
   // Add a single card from hand to an existing table meld.
   // Payload: { meldId, cardId }
-  socket.on('game:szuras', async ({ meldId, cardId }, callback) => {
+  socket.on('game:layOff', async ({ meldId, cardId }, callback) => {
     try {
       const { gameRoomId } = socket;
       if (!gameRoomId) return callback({ error: msg.NOT_IN_ROOM });
@@ -527,14 +538,14 @@ function registerInGameHandlers(io, socket) {
       const userId = String(socket.user.id);
 
       if (!gs.hasFirstMeld[userId]) {
-        return callback({ error: msg.SZURAS_BEFORE_FIRST_MELD });
+        return callback({ error: msg.LAY_OFF_BEFORE_FIRST_MELD });
       }
 
       // Szúrás on the first-meld turn is only allowed when the player has declared
-      // a handolás finish intention via game:handolasBid.
+      // a handolás finish intention via game:goOutFromHandBid.
       const hand = gs.hands[userId];
-      if (gs.firstMeldTurnPlayer === userId && !gs.handolasBid[userId]) {
-        return callback({ error: msg.SZURAS_ONLY_WITH_HANDOLAS });
+      if (gs.firstMeldTurnPlayer === userId && !gs.goOutFromHandBid[userId]) {
+        return callback({ error: msg.LAY_OFF_ONLY_WITH_GO_OUT_FROM_HAND });
       }
 
       const meld = gs.melds.find((m) => m.id === meldId);
@@ -554,10 +565,10 @@ function registerInGameHandlers(io, socket) {
       hand.splice(cardIndex, 1);
       meld.cards.push(card);
       meld.cards = sortMeldCards(meld.cards, meld.type);
-      gs.usedSzurasThisTurn = true;
+      gs.usedLayOffThisTurn = true;
 
-      if (gs.handolasBid[userId]) {
-        gs.szurasHistory.push({ meldId: meld.id, card });
+      if (gs.goOutFromHandBid[userId]) {
+        gs.layOffHistory.push({ meldId: meld.id, card });
       }
 
       if (gs.discardDrawnCard && !hand.some((c) => c.id === gs.discardDrawnCard.id)) {
@@ -574,13 +585,13 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:handolasBid ──────────────────────────────────────────────────────
+  // ── game:goOutFromHandBid ──────────────────────────────────────────────────────
   // Toggles the player's handolás finish intention on the first-meld turn.
-  // Turning ON:  allows szúrás this turn; operations are logged to szurasHistory.
-  // Turning OFF: reverts all szúrás from szurasHistory in reverse order,
+  // Turning ON:  allows szúrás this turn; operations are logged to layOffHistory.
+  // Turning OFF: reverts all szúrás from layOffHistory in reverse order,
   //              restoring the hand and the affected table melds to their
   //              pre-bid state. The player can then just discard normally.
-  socket.on('game:handolasBid', async (_, callback) => {
+  socket.on('game:goOutFromHandBid', async (_, callback) => {
     try {
       const { gameRoomId } = socket;
       if (!gameRoomId) return callback({ error: msg.NOT_IN_ROOM });
@@ -594,14 +605,14 @@ function registerInGameHandlers(io, socket) {
       const userId = String(socket.user.id);
 
       if (gs.firstMeldTurnPlayer !== userId) {
-        return callback({ error: msg.HANDOLAS_ONLY_FIRST_MELD_TURN });
+        return callback({ error: msg.GO_OUT_FROM_HAND_ONLY_FIRST_MELD_TURN });
       }
 
-      if (gs.handolasBid[userId]) {
+      if (gs.goOutFromHandBid[userId]) {
         // ── Cancel bid: revert all szúrás in reverse order ──────────────────
         const hand = gs.hands[userId];
-        for (let i = gs.szurasHistory.length - 1; i >= 0; i -= 1) {
-          const { meldId, card } = gs.szurasHistory[i];
+        for (let i = gs.layOffHistory.length - 1; i >= 0; i -= 1) {
+          const { meldId, card } = gs.layOffHistory[i];
           const meld = gs.melds.find((m) => m.id === meldId);
           if (meld) {
             meld.cards = meld.cards.filter((c) => c.id !== card.id);
@@ -609,12 +620,12 @@ function registerInGameHandlers(io, socket) {
           }
           hand.push(card);
         }
-        gs.szurasHistory = [];
-        gs.handolasBid[userId] = false;
-        gs.usedSzurasThisTurn = false;
+        gs.layOffHistory = [];
+        gs.goOutFromHandBid[userId] = false;
+        gs.usedLayOffThisTurn = false;
       } else {
         // ── Activate bid ─────────────────────────────────────────────────────
-        gs.handolasBid[userId] = true;
+        gs.goOutFromHandBid[userId] = true;
       }
 
       await emitGameState(io, gameRoomId, gs);
@@ -679,7 +690,7 @@ function registerInGameHandlers(io, socket) {
   });
 
   // ── game:undoDraw ──────────────────────────────────────────────────────────
-  // Undo a draw from the discard pile or from the cserelap (handolás draw).
+  // Undo a draw from the discard pile or from the swapCard (handolás draw).
   // Returns the card and reverts to draw phase — no replacement card is issued.
   socket.on('game:undoDraw', async (_, callback) => {
     try {
@@ -693,7 +704,7 @@ function registerInGameHandlers(io, socket) {
 
       // Only a face-up draw can be taken back; a card from the deck is hidden
       // information the player has already seen.
-      if (gs.phase !== 'discard' || !['discard', 'cserelap'].includes(gs.drawSource)) {
+      if (gs.phase !== 'discard' || !['discard', 'swapCard'].includes(gs.drawSource)) {
         return callback({ error: msg.NOTHING_TO_UNDO });
       }
 

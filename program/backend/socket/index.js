@@ -2,22 +2,34 @@
 const { verify } = require('jsonwebtoken');
 const { registerGameHandlers } = require('./gameManager');
 const msg = require('../utils/messages');
+const { loadCurrentUser } = require('../utils/currentUser');
 
 const secret = process.env.JWT_SECRET || 'secret';
 
 // eslint-disable-next-line jsdoc/require-jsdoc
 function initSocket(io) {
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const { token } = socket.handshake.auth;
     if (!token) return next(new Error(msg.UNAUTHORIZED));
 
+    let payload;
     try {
-      const payload = verify(token, secret);
-      // eslint-disable-next-line no-param-reassign
-      socket.user = payload;
-      return next();
+      payload = verify(token, secret);
     } catch {
       return next(new Error(msg.UNAUTHORIZED));
+    }
+
+    // Same check as the REST routes: the account must still exist and not be suspended.
+    try {
+      const { user, message } = await loadCurrentUser(payload.id);
+      if (!user) return next(new Error(message));
+      // eslint-disable-next-line no-param-reassign
+      socket.user = { id: user.id, name: user.name };
+      return next();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      return next(new Error(msg.SERVER_ERROR));
     }
   });
 
