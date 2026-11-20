@@ -1,5 +1,6 @@
 const db = require('../models');
 const { getRoomSettings } = require('../socket/gameManager');
+const msg = require('../utils/messages');
 
 const { User, Game, GameUser } = db;
 
@@ -61,7 +62,8 @@ module.exports = async (fastify) => {
           : null,
       });
     } catch (err) {
-      return reply.status(500).send({ error: err.message });
+      request.log.error(err);
+      return reply.status(500).send({ message: msg.SERVER_ERROR });
     }
   });
 };

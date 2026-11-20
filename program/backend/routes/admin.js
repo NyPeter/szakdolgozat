@@ -1,6 +1,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 const { Op } = require('sequelize');
 const db = require('../models');
+const msg = require('../utils/messages');
 
 const { User } = db;
 
@@ -9,10 +10,10 @@ module.exports = async (fastify) => {
     try {
       await request.jwtVerify();
     } catch {
-      return reply.status(401).send({ message: 'Unauthorized.' });
+      return reply.status(401).send({ message: msg.UNAUTHORIZED });
     }
     if (!request.user.isAdmin) {
-      return reply.status(403).send({ message: 'Forbidden.' });
+      return reply.status(403).send({ message: msg.FORBIDDEN });
     }
     return undefined;
   });
@@ -46,8 +47,8 @@ module.exports = async (fastify) => {
     const { days } = request.body;
 
     const target = await User.findByPk(targetId);
-    if (!target) return reply.status(404).send({ message: 'User not found.' });
-    if (target.isAdmin) return reply.status(403).send({ message: 'Cannot modify an admin.' });
+    if (!target) return reply.status(404).send({ message: msg.USER_NOT_FOUND });
+    if (target.isAdmin) return reply.status(403).send({ message: msg.CANNOT_MODIFY_ADMIN });
 
     let date = null;
     if (days === -1) {

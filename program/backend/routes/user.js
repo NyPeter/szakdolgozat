@@ -1,7 +1,13 @@
 const fs = require('fs');
 const db = require('../models');
 
-const { User } = db;
+const {
+  User, Game, GameUser, Chat, sequelize,
+} = db;
+const { Op } = db.Sequelize;
+const { describeUserError } = require('../utils/userErrors');
+const msg = require('../utils/messages');
+const { handleLeave, getGameState } = require('../socket/lobbyHandlers');
 
 module.exports = async (fastify) => {
   fastify.get('/user', { onRequest: [fastify.auth] }, async (request, reply) => {
@@ -14,13 +20,18 @@ module.exports = async (fastify) => {
     const { email, name } = request.body;
     const user = await User.findByPk(id);
     if (!user) {
-      return reply.status(404).send({ error: 'User not found' });
+      return reply.status(404).send({ message: msg.USER_NOT_FOUND });
     }
-    await user.update({
-      name: name ?? user.name,
-      email: email ?? user.email,
-    });
-    return reply.send(user);
+    try {
+      await user.update({
+        name: name ?? user.name,
+        email: email ?? user.email,
+      });
+      return reply.send(user);
+    } catch (err) {
+      const { status, message } = describeUserError(err);
+      return reply.status(status).send({ message });
+    }
   });
 
   fastify.put('/user/password', { onRequest: [fastify.auth] }, async (request, reply) => {
@@ -28,39 +39,103 @@ module.exports = async (fastify) => {
     const { currentPassword, newPassword } = request.body;
     const user = await User.findByPk(id);
     if (!user) {
-      return reply.status(404).send({ error: 'User not found' });
+      return reply.status(404).send({ message: msg.USER_NOT_FOUND });
     }
-    if (user.comparePassword(currentPassword)) {
-      await user.update({
-        password: newPassword ?? user.password,
-      });
-      return reply.send({ message: 'Password updated.' });
+    if (!currentPassword || !newPassword) {
+      return reply.status(400).send({ message: msg.PASSWORDS_REQUIRED });
     }
-    return reply.status(401).send({ message: 'Current password doesn\'t match!' });
+    if (!user.comparePassword(currentPassword)) {
+      return reply.status(401).send({ message: msg.WRONG_CURRENT_PASSWORD });
+    }
+    try {
+      await user.update({ password: newPassword });
+      return reply.send({ message: msg.PASSWORD_CHANGED });
+    } catch (err) {
+      const { status, message } = describeUserError(err);
+      return reply.status(status).send({ message });
+    }
   });
 
   fastify.delete('/user', { onRequest: [fastify.auth] }, async (request, reply) => {
+    const { id } = request.user;
+    const { password } = request.body ?? {};
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return reply.status(404).send({ message: msg.USER_NOT_FOUND });
+    }
+    if (!password || !user.comparePassword(password)) {
+      return reply.status(401).send({ message: msg.WRONG_PASSWORD });
+    }
+
+    // Seats of the user in running games. A seat that is not surrendered means
+    // the others are still waiting for this player's turns.
+    const runningSeats = await GameUser.findAll({
+      where: { userID: id },
+      include: [{ model: Game, where: { status: 'started' }, required: true }],
+    });
+    if (runningSeats.some((seat) => !seat.isSurrendered)) {
+      return reply.status(409).send({ message: msg.ACTIVE_GAME });
+    }
+
     try {
-      const { id } = request.user;
+      const { io } = fastify;
+      const sockets = (await io.fetchSockets()).filter((s) => s.user.id === id);
 
-      const user = await User.findByPk(id);
-
-      if (!user) {
-        return reply.status(404).send({ error: 'User not found' });
+      // Leave the waiting room like on a closed tab: the room goes to the next
+      // player, or is removed when nobody else is in it.
+      // eslint-disable-next-line no-restricted-syntax
+      for (const s of sockets) {
+        // eslint-disable-next-line no-await-in-loop
+        await handleLeave(io, s);
       }
 
-      // Delete avatar file if exists
-      const files = await fs.promises.readdir('uploads');
-      const oldAvatar = files.find((f) => f.startsWith(`avatar_${request.user.id}.`));
-      if (oldAvatar) {
-        await fs.promises.unlink(`uploads/${oldAvatar}`);
+      await sequelize.transaction(async (transaction) => {
+        await Chat.destroy({ where: { userID: id }, transaction });
+        await Game.update({ winnerID: null }, { where: { winnerID: id }, transaction });
+
+        // A game must have an owner: hand it to another participant
+        // (preferably one who is still playing), or remove it if there is none.
+        const owned = await Game.findAll({ where: { ownerID: id }, transaction });
+        // eslint-disable-next-line no-restricted-syntax
+        for (const game of owned) {
+          // eslint-disable-next-line no-await-in-loop
+          const heir = await GameUser.findOne({
+            where: { gameID: game.id, userID: { [Op.ne]: id } },
+            order: [['isSurrendered', 'ASC'], ['createdAt', 'ASC']],
+            transaction,
+          });
+          // eslint-disable-next-line no-await-in-loop
+          if (heir) await game.update({ ownerID: heir.userID }, { transaction });
+          // eslint-disable-next-line no-await-in-loop
+          else await game.destroy({ transaction });
+        }
+
+        await GameUser.destroy({ where: { userID: id }, transaction });
+        await user.destroy({ transaction });
+      });
+
+      // The account is gone; what follows is cleanup that must not undo it.
+      try {
+        const files = await fs.promises.readdir('uploads');
+        const avatar = files.find((f) => f.startsWith(`avatar_${id}.`));
+        if (avatar) await fs.promises.unlink(`uploads/${avatar}`);
+      } catch (err) {
+        request.log.warn(err);
       }
 
-      await user.destroy();
+      sockets.forEach((s) => s.disconnect(true));
 
-      return reply.status(204).send({ message: 'User account deleted successfully.' });
+      // Running games the user had surrendered in: refresh the player list.
+      await Promise.all(runningSeats.map(async (seat) => {
+        const state = await getGameState(seat.gameID);
+        if (state) io.to(`game:${seat.gameID}`).emit('game:update', state);
+      }));
+
+      return reply.status(204).send();
     } catch (err) {
-      return reply.status(500).send({ message: `Error deleting avatar: ${err}` });
+      request.log.error(err);
+      return reply.status(500).send({ message: msg.DELETE_FAILED });
     }
   });
 
@@ -68,7 +143,7 @@ module.exports = async (fastify) => {
     try {
       const data = await request.file();
       if (!data) {
-        return reply.status(400).send({ error: 'No file uploaded' });
+        return reply.status(400).send({ message: msg.NO_FILE });
       }
 
       let fileBuffer;
@@ -86,7 +161,7 @@ module.exports = async (fastify) => {
           tooLargeErrors.includes(err.code)
           || (err.message && err.message.toLowerCase().includes('too large'))
         ) {
-          return reply.status(413).send({ error: 'File exceeds 5MB limit' });
+          return reply.status(413).send({ message: msg.FILE_TOO_LARGE });
         }
 
         throw err;
@@ -95,7 +170,7 @@ module.exports = async (fastify) => {
       // Only allow images
       const allowed = ['image/png', 'image/jpeg', 'image/jpg'];
       if (!allowed.includes(data.mimetype)) {
-        return reply.status(400).send({ error: 'Invalid file type' });
+        return reply.status(400).send({ message: msg.INVALID_FILE_TYPE });
       }
 
       await fs.promises.mkdir('uploads', { recursive: true });
@@ -122,7 +197,8 @@ module.exports = async (fastify) => {
 
       return reply.send({ avatarURL: user.avatarURL });
     } catch (err) {
-      return reply.status(500).send({ error: 'Upload failed' });
+      request.log.error(err);
+      return reply.status(500).send({ message: msg.UPLOAD_FAILED });
     }
   });
 };
