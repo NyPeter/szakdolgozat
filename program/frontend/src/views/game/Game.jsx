@@ -122,18 +122,27 @@ export const Game = () => {
       navigate('/Games');
     });
 
-    if (joinedGameIdRef.current !== gameId) {
-      joinedGameIdRef.current = gameId;
+    const join = () => {
       socket.emit('game:join', { gameId, password: null }, (res) => {
-        if (res.error === 'Wrong password.' || res.error === 'Hibás jelszó.') {
+        if (res.needsPassword) {
           setNeedsPassword(true);
         } else if (res.error) {
           setError(res.error);
         }
       });
+    };
+
+    if (joinedGameIdRef.current !== gameId) {
+      joinedGameIdRef.current = gameId;
+      join();
     }
 
+    // After a dropped connection the server sees a new socket that is in no room,
+    // so the room has to be joined again.
+    socket.io.on('reconnect', join);
+
     return () => {
+      socket.io.off('reconnect', join);
       socket.off('game:joined');
       socket.off('game:update');
       socket.off('game:started');

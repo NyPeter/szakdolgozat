@@ -75,9 +75,7 @@ export function GameBoard({ room, gameState: gs, userId }) {
   const currentPlayerId = String(gs.players[gs.turnIndex]);
   const isMyTurn = currentPlayerId === myId;
   const myHand = gs.hands[myId] ?? [];
-  const topDiscard = gs.discardPile.length > 0
-    ? gs.discardPile[gs.discardPile.length - 1]
-    : null;
+  const topDiscard = gs.discardTop ?? null;
 
   const playerNames = Object.fromEntries(
     room.players.map((p) => [String(p.id), p.name]),
@@ -254,7 +252,7 @@ export function GameBoard({ room, gameState: gs, userId }) {
               const strId = String(id);
               return (
                 <span key={strId} className="gb-score-entry">
-                  {playerNames[strId] ?? strId}: <strong>{gs.scores[strId] ?? 0}</strong>
+                  {playerNames[strId] ?? 'Törölt játékos'}: <strong>{gs.scores[strId] ?? 0}</strong>
                 </span>
               );
             })}
@@ -286,7 +284,7 @@ export function GameBoard({ room, gameState: gs, userId }) {
                 />
               )}
               <div className="gb-opponent-name">
-                {playerNames[strId] ?? '?'}
+                {playerNames[strId] ?? 'Törölt játékos'}
                 {gs.hasFirstMeld?.[strId] && (
                   <Badge bg="success" style={{ fontSize: '0.6rem' }}>✓</Badge>
                 )}
@@ -354,7 +352,7 @@ export function GameBoard({ room, gameState: gs, userId }) {
         </div>
 
         <div className="gb-pile">
-          <div className="gb-pile-label">Dobóhalom ({gs.discardPile.length})</div>
+          <div className="gb-pile-label">Dobóhalom ({gs.discardCount})</div>
           {topDiscard ? (
             <Card
               card={topDiscard}
@@ -378,10 +376,10 @@ export function GameBoard({ room, gameState: gs, userId }) {
               key={meld.id}
               className={`gb-meld-group ${isTarget ? 'gb-meld-target' : ''}`}
               onClick={() => handleTargetMeld(meld.id)}
-              title={`${playerNames[meld.playerId] ?? '?'} — ${meld.type === 'set' ? 'csoport' : 'sor'}`}
+              title={`${playerNames[meld.playerId] ?? 'Törölt játékos'} — ${meld.type === 'set' ? 'csoport' : 'sor'}`}
             >
               <div className="gb-meld-owner">
-                {playerNames[meld.playerId] ?? '?'}
+                {playerNames[meld.playerId] ?? 'Törölt játékos'}
               </div>
               <div className="gb-meld-cards">
                 {meld.cards.map((card) => {

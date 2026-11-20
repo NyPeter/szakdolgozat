@@ -12,12 +12,12 @@ export function GameOver({ data, playerNames, onClose }) {
         {data.surrenderWin ? (
           <p className="go-winner">
             Győztes (feladás által):{' '}
-            <strong>{playerNames[data.winnerId] ?? data.winnerId}</strong>
+            <strong>{playerNames[data.winnerId] ?? 'Törölt játékos'}</strong>
           </p>
         ) : (
           <p className="go-winner">
             Győztes:{' '}
-            <strong>{playerNames[data.winnerId] ?? data.winnerId}</strong>
+            <strong>{playerNames[data.winnerId] ?? 'Törölt játékos'}</strong>
           </p>
         )}
         <table className="go-table">
@@ -30,11 +30,11 @@ export function GameOver({ data, playerNames, onClose }) {
           </thead>
           <tbody>
             {sorted.map(([pid, total], i) => (
-              <tr key={pid} className={i === 0 ? 'go-row-winner' : ''}>
+              <tr key={pid} className={pid === String(data.winnerId) ? 'go-row-winner' : ''}>
                 <td>{i + 1}.</td>
                 <td>
-                  {playerNames[pid] ?? pid}
-                  {i === 0 && (
+                  {playerNames[pid] ?? 'Törölt játékos'}
+                  {pid === String(data.winnerId) && (
                     <Badge bg="warning" text="dark" className="ms-1">Győztes</Badge>
                   )}
                   {surrendered.includes(pid) && (

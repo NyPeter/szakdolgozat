@@ -31,7 +31,7 @@ export function RoundOver({ data, playerNames, onDismiss }) {
           )}
         </h3>
         <p className="go-winner">
-          Nyertes: <strong>{playerNames[data.winnerId] ?? data.winnerId}</strong>
+          Nyertes: <strong>{playerNames[data.winnerId] ?? 'Törölt játékos'}</strong>
         </p>
         <table className="go-table">
           <thead>
@@ -44,7 +44,7 @@ export function RoundOver({ data, playerNames, onDismiss }) {
           <tbody>
             {sorted.map(([pid, total]) => (
               <tr key={pid} className={pid === data.winnerId ? 'go-row-winner' : ''}>
-                <td>{playerNames[pid] ?? pid}</td>
+                <td>{playerNames[pid] ?? 'Törölt játékos'}</td>
                 <td className={data.scores[pid] < 0 ? 'go-pts-negative' : 'go-pts-positive'}>
                   {data.scores[pid] > 0 ? `+${data.scores[pid]}` : data.scores[pid]}
                 </td>

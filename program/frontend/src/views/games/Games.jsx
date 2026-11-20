@@ -11,6 +11,7 @@ export const Games = () => {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [myActiveGame, setMyActiveGame] = useState(null);
+  const [createError, setCreateError] = useState("");
   const navigate = useNavigate();
   const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
@@ -49,9 +50,10 @@ export const Games = () => {
   const createGame = () => {
     const socket = getSocket();
     if (!socket) return;
+    setCreateError("");
     socket.emit("game:create", {}, (res) => {
       if (res.error) {
-        console.error("Create game error:", res.error);
+        setCreateError(res.error);
         return;
       }
       navigate(`/Game/${res.gameId}`);
@@ -71,6 +73,12 @@ export const Games = () => {
           Új Szoba Létrehozása
         </Button>
       </div>
+
+      {createError && (
+        <Alert variant="danger" dismissible onClose={() => setCreateError("")}>
+          {createError}
+        </Alert>
+      )}
 
       {myActiveGame && (
         <Alert variant="warning" className="d-flex align-items-center justify-content-between">
