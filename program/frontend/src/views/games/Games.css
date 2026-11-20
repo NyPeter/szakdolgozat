@@ -63,3 +63,52 @@ body {
 .games-create-btn {
   width: 180px;
 }
+
+/* Phones: title on its own line, the two buttons below it */
+@media (max-width: 700px) {
+  .games-container {
+    padding-top: 1rem;
+  }
+
+  .games-header {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .games-title {
+    order: -1;
+    width: 100%;
+    font-size: 2.6rem;
+  }
+
+  .games-back-btn,
+  .games-create-btn {
+    flex: 1;
+    width: auto;
+  }
+
+  .games-table {
+    width: 100%;
+  }
+
+  /* room ID column: not needed to join */
+  .games-table th:first-child,
+  .games-table td:first-child {
+    display: none;
+  }
+
+  .games-table th,
+  .games-table td {
+    padding: 0.4rem;
+  }
+
+  .games-table .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .games-btn {
+    width: 110px;
+  }
+}

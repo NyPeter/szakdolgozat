@@ -34,7 +34,9 @@ body {
   color: black;
 }
 
-.mt-3 {
+/* Scoped to this page: every view's CSS ends up in one global stylesheet,
+   so a bare .mt-3 or button rule would change every page. */
+.profile-container .mt-3 {
   max-width: 450px;
   margin: auto;
   text-align: left;
@@ -45,6 +47,6 @@ body {
   margin-bottom: 2rem;
 }
 
-button {
+.profile-container button {
   width: 200px;
 }

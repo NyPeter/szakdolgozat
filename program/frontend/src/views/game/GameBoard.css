@@ -197,8 +197,10 @@
   flex-shrink: 0;
 }
 
-.gb-meld-group:hover {
-  background: rgba(255, 255, 255, 0.07);
+@media (hover: hover) {
+  .gb-meld-group:hover {
+    background: rgba(255, 255, 255, 0.07);
+  }
 }
 
 /* Highlighted ring when the meld is selected as a szúrás target */
@@ -261,9 +263,11 @@
 .gb-hand-swap-mode .card-wrapper {
   cursor: pointer;
 }
-.gb-hand-swap-mode .card-wrapper:hover {
-  filter: drop-shadow(0 4px 10px rgba(243, 156, 18, 0.8));
-  transform: translateY(-10px);
+@media (hover: hover) {
+  .gb-hand-swap-mode .card-wrapper:hover {
+    filter: drop-shadow(0 4px 10px rgba(243, 156, 18, 0.8));
+    transform: translateY(-10px);
+  }
 }
 
 /* ── Card styles (shared across the whole board) ────────────────────────── */
@@ -328,10 +332,14 @@
   cursor: pointer;
 }
 
-/* Lift + shadow on hover for any clickable card */
-.card-clickable:hover {
-  transform: translateY(-10px);
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+/* Lift + shadow on hover for any clickable card.
+   Only with a mouse: on a touch screen :hover sticks after a tap,
+   so a deselected card would stay lifted and look selected. */
+@media (hover: hover) {
+  .card-clickable:hover {
+    transform: translateY(-10px);
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+  }
 }
 
 /* Blue glow + lift for selected cards */
@@ -439,21 +447,5 @@
   .card-wrapper {
     width: 48px !important;
     height: 67px !important;
-  }
-}
-
-/* ── Mobile: game room chat as bottom panel ─────────────────────────────── */
-@media (max-width: 700px) {
-  .game-room-body {
-    flex-direction: column !important;
-  }
-
-  .game-room-chat-sidebar {
-    flex: none !important;
-    width: 100% !important;
-  }
-
-  .game-room-chat-sidebar .chat-panel {
-    height: 200px !important;
   }
 }

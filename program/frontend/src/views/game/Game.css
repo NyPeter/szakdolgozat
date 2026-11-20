@@ -141,7 +141,7 @@ body {
 
 /* Narrower chat column during gameplay */
 .game-room-chat-sidebar {
-  flex: 0 0 260px !important;
+  flex: 0 0 260px;
 }
 
 .game-room-chat-sidebar .chat-panel {
@@ -166,6 +166,62 @@ body {
   min-width: 20px;
   max-width: 40px;
   vertical-align: right;
+}
+
+/* ── Medium screens (landscape phone, tablet) ──────────────── */
+/* Three columns do not fit: the settings panel moves below the
+   player list and the chat. Only the waiting room has it. */
+@media (max-width: 900px) {
+  .game-room-body {
+    flex-wrap: wrap;
+  }
+
+  .game-room-chat-col {
+    min-width: 0;
+  }
+
+  .game-room-right {
+    flex: 1 1 100%;
+  }
+}
+
+/* ── Phones: one column, every panel full width ────────────── */
+@media (max-width: 700px) {
+  .game-room-container {
+    padding: 0.75rem;
+  }
+
+  .game-room-title {
+    font-size: 2.5rem;
+  }
+
+  .game-room-btn {
+    width: auto;
+  }
+
+  /* stretch: in a column, flex-start would size each panel to
+     its content, so the 15-card hand would widen the page */
+  .game-room-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* flex: none: a flex-basis like 220px would set the height
+     in a column, not the width */
+  .game-room-body > * {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .chat-panel {
+    height: 300px;
+  }
+
+  .game-room-chat-sidebar .chat-panel {
+    height: 200px;
+    min-height: 0;
+  }
 }
 
 /* ── Error / misc ───────────────────────────────────────────── */
@@ -205,9 +261,10 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 2rem 2.5rem;
-  min-width: 340px;
   max-width: 520px;
-  width: 100%;
+  width: calc(100% - 2rem);
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
   color: white;
   text-align: center;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
@@ -265,4 +322,16 @@ body {
 .go-badge-note {
   margin-top: 0.5rem;
   font-size: 0.9rem;
+}
+
+/* Phones: after the base .go-* rules, so it overrides them */
+@media (max-width: 700px) {
+  .go-box {
+    padding: 1.25rem 1rem;
+  }
+
+  .go-table th,
+  .go-table td {
+    padding: 6px 4px;
+  }
 }
