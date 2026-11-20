@@ -15,9 +15,36 @@ function getRoomSettings(gameId) {
   return roomSettings.get(gameId) ?? { maxPlayers: 6, password: null };
 }
 
+// Copy of the game state taken at the start of the current turn: gameId -> gameState.
+// Used to roll a turn back (undo of a face-up draw, timeout with a half-finished turn).
+const turnSnapshots = new Map();
+
 function clearTurnTimer(gameId) {
   const t = turnTimers.get(gameId);
   if (t) { clearTimeout(t); turnTimers.delete(gameId); }
+}
+
+function saveTurnSnapshot(gameId, gs) {
+  turnSnapshots.set(gameId, structuredClone(gs));
+}
+
+// Puts the state back to how it was when the turn started. The object itself is
+// kept (gameStates holds a reference to it), only its contents are replaced.
+function restoreTurnSnapshot(gameId, gs) {
+  const snapshot = turnSnapshots.get(gameId);
+  if (!snapshot) return false;
+  // eslint-disable-next-line no-param-reassign
+  Object.keys(gs).forEach((key) => { delete gs[key]; });
+  Object.assign(gs, structuredClone(snapshot));
+  return true;
+}
+
+// Frees everything kept in memory for a game that has ended.
+function clearGameMemory(gameId) {
+  clearTurnTimer(gameId);
+  gameStates.delete(gameId);
+  gameRoundData.delete(gameId);
+  turnSnapshots.delete(gameId);
 }
 
 async function emitGameState(io, gameId, gs) {
@@ -40,5 +67,8 @@ module.exports = {
   turnTimers,
   getRoomSettings,
   clearTurnTimer,
+  saveTurnSnapshot,
+  restoreTurnSnapshot,
+  clearGameMemory,
   emitGameState,
 };

@@ -12,6 +12,8 @@ const {
 
 const { initGameState, getPlayerView } = require('./gameEngine');
 const { startTurnTimer } = require('./gameHandlers');
+const msg = require('../utils/messages');
+const { serverError } = require('../utils/serverError');
 
 async function getGameState(gameId) {
   const game = await Game.findByPk(gameId, {
@@ -57,8 +59,9 @@ async function handleLeave(io, socket) {
     return;
   }
 
-  if (game.status === 'started') {
-    // Disconnect from the socket room but keep GameUser — allows rejoin
+  if (game.status !== 'waiting') {
+    // Started: keep GameUser so the player can rejoin.
+    // Finished: keep everything, the result is the leaderboard's data.
     socket.leave(`game:${gameRoomId}`);
     socket.gameRoomId = null;
     return;
@@ -97,7 +100,7 @@ const creatingUsers = new Set();
 function registerLobbyHandlers(io, socket) {
   socket.on('game:create', async (_, callback) => {
     if (creatingUsers.has(socket.user.id)) {
-      return callback({ error: 'Már folyamatban van a szoba létrehozása.' });
+      return callback({ error: msg.ROOM_CREATE_IN_PROGRESS });
     }
     creatingUsers.add(socket.user.id);
     try {
@@ -109,14 +112,14 @@ function registerLobbyHandlers(io, socket) {
         include: [{ model: Game, where: { status: 'started' }, required: true }],
       });
       if (activeGU) {
-        return callback({ error: 'Már van egy aktív játékod. Előbb fejezd be vagy add fel.' });
+        return callback({ error: msg.ACTIVE_GAME });
       }
 
       const existing = await Game.findOne({
         where: { status: 'waiting', ownerID: socket.user.id },
       });
       if (existing) {
-        return callback({ error: 'You already have an open room.' });
+        return callback({ error: msg.ROOM_ALREADY_OPEN });
       }
 
       const game = await Game.create({ status: 'waiting', ownerID: socket.user.id });
@@ -132,7 +135,7 @@ function registerLobbyHandlers(io, socket) {
 
       return callback({ ok: true, gameId: game.id });
     } catch (err) {
-      return callback({ error: err.message });
+      return callback(serverError(err));
     } finally {
       creatingUsers.delete(socket.user.id);
     }
@@ -145,7 +148,10 @@ function registerLobbyHandlers(io, socket) {
       });
 
       if (!game) {
-        return callback({ error: 'Room not found.' });
+        return callback({ error: msg.ROOM_NOT_FOUND });
+      }
+      if (game.status === 'finished') {
+        return callback({ error: msg.GAME_FINISHED });
       }
 
       // Already tracked on this socket — re-emit state, skip all DB writes
@@ -167,7 +173,7 @@ function registerLobbyHandlers(io, socket) {
           where: { gameID: gameId, userID: socket.user.id, isSurrendered: false },
         });
         if (!existing) {
-          return callback({ error: 'A játék már elindult.' });
+          return callback({ error: msg.GAME_ALREADY_STARTED });
         }
         socket.gameRoomId = gameId;
         socket.join(`game:${gameId}`);
@@ -185,7 +191,7 @@ function registerLobbyHandlers(io, socket) {
         include: [{ model: Game, where: { status: 'started' }, required: true }],
       });
       if (activeGU && activeGU.gameID !== gameId) {
-        return callback({ error: 'Már van egy aktív játékod. Előbb fejezd be vagy add fel.' });
+        return callback({ error: msg.ACTIVE_GAME });
       }
 
       // Waiting room join — leave current room first
@@ -194,10 +200,10 @@ function registerLobbyHandlers(io, socket) {
       }
 
       if (settings.password && settings.password !== password) {
-        return callback({ error: 'Wrong password.' });
+        return callback({ error: msg.WRONG_PASSWORD, needsPassword: true });
       }
       if (game.Players.length >= settings.maxPlayers) {
-        return callback({ error: 'Room is full.' });
+        return callback({ error: msg.ROOM_FULL });
       }
 
       const [, created] = await GameUser.findOrCreate({
@@ -213,7 +219,7 @@ function registerLobbyHandlers(io, socket) {
 
       return callback({ ok: true, created });
     } catch (err) {
-      return callback({ error: err.message });
+      return callback(serverError(err));
     }
   });
 
@@ -222,24 +228,24 @@ function registerLobbyHandlers(io, socket) {
       await handleLeave(io, socket);
       return callback({ ok: true });
     } catch (err) {
-      return callback({ error: err.message });
+      return callback(serverError(err));
     }
   });
 
   socket.on('game:settings', async ({ maxPlayers, password }, callback) => {
     try {
       const { gameRoomId } = socket;
-      if (!gameRoomId) return callback({ error: 'Not in a room.' });
+      if (!gameRoomId) return callback({ error: msg.NOT_IN_ROOM });
 
       const game = await Game.findByPk(gameRoomId);
-      if (!game) return callback({ error: 'Room not found.' });
-      if (game.ownerID !== socket.user.id) return callback({ error: 'Only the owner can change settings.' });
-      if (game.status !== 'waiting') return callback({ error: 'Cannot change settings after game started.' });
+      if (!game) return callback({ error: msg.ROOM_NOT_FOUND });
+      if (game.ownerID !== socket.user.id) return callback({ error: msg.OWNER_ONLY_SETTINGS });
+      if (game.status !== 'waiting') return callback({ error: msg.GAME_ALREADY_STARTED });
 
       const clamped = Math.min(6, Math.max(2, Number(maxPlayers) || 6));
       const currentPlayers = await GameUser.count({ where: { gameID: gameRoomId } });
       if (clamped < currentPlayers) {
-        return callback({ error: `Cannot set max lower than current player count (${currentPlayers}).` });
+        return callback({ error: msg.MAX_PLAYERS_TOO_LOW(currentPlayers) });
       }
 
       roomSettings.set(gameRoomId, {
@@ -251,20 +257,22 @@ function registerLobbyHandlers(io, socket) {
       io.to(`game:${gameRoomId}`).emit('game:update', state);
       return callback({ ok: true });
     } catch (err) {
-      return callback({ error: err.message });
+      return callback(serverError(err));
     }
   });
 
   socket.on('game:kick', async ({ targetUserId }, callback) => {
     try {
       const { gameRoomId } = socket;
-      if (!gameRoomId) return callback({ error: 'Not in a room.' });
+      if (!gameRoomId) return callback({ error: msg.NOT_IN_ROOM });
 
       const game = await Game.findByPk(gameRoomId);
-      if (!game) return callback({ error: 'Room not found.' });
-      if (game.ownerID !== socket.user.id) return callback({ error: 'Only the owner can kick.' });
-      if (game.status !== 'waiting') return callback({ error: 'Game already started.' });
-      if (String(targetUserId) === String(socket.user.id)) return callback({ error: 'Cannot kick yourself.' });
+      if (!game) return callback({ error: msg.ROOM_NOT_FOUND });
+      if (game.ownerID !== socket.user.id) return callback({ error: msg.OWNER_ONLY_KICK });
+      if (game.status !== 'waiting') return callback({ error: msg.GAME_ALREADY_STARTED });
+      if (String(targetUserId) === String(socket.user.id)) {
+        return callback({ error: msg.CANNOT_KICK_SELF });
+      }
 
       await GameUser.destroy({ where: { gameID: gameRoomId, userID: targetUserId } });
 
@@ -280,22 +288,23 @@ function registerLobbyHandlers(io, socket) {
       io.to(`game:${gameRoomId}`).emit('game:update', state);
       return callback({ ok: true });
     } catch (err) {
-      return callback({ error: err.message });
+      return callback(serverError(err));
     }
   });
 
   socket.on('game:start', async (_, callback) => {
     try {
       const { gameRoomId } = socket;
-      if (!gameRoomId) return callback({ error: 'Not in a room.' });
+      if (!gameRoomId) return callback({ error: msg.NOT_IN_ROOM });
 
       const game = await Game.findByPk(gameRoomId, {
         include: [{ model: User, as: 'Players', attributes: ['id'], through: { attributes: [] } }],
       });
 
-      if (!game) return callback({ error: 'Room not found.' });
-      if (game.ownerID !== socket.user.id) return callback({ error: 'Only the owner can start.' });
-      if (game.Players.length < 2) return callback({ error: 'Need at least 2 players.' });
+      if (!game) return callback({ error: msg.ROOM_NOT_FOUND });
+      if (game.ownerID !== socket.user.id) return callback({ error: msg.OWNER_ONLY_START });
+      if (game.status !== 'waiting') return callback({ error: msg.GAME_ALREADY_STARTED });
+      if (game.Players.length < 2) return callback({ error: msg.NOT_ENOUGH_PLAYERS });
 
       await game.update({ status: 'started' });
       roomSettings.delete(game.id);
@@ -317,7 +326,7 @@ function registerLobbyHandlers(io, socket) {
       await emitGameState(io, gameRoomId, gs);
       return callback({ ok: true });
     } catch (err) {
-      return callback({ error: err.message });
+      return callback(serverError(err));
     }
   });
 

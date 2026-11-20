@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { verify } = require('jsonwebtoken');
 const { registerGameHandlers } = require('./gameManager');
+const msg = require('../utils/messages');
 
 const secret = process.env.JWT_SECRET || 'secret';
 
@@ -8,7 +9,7 @@ const secret = process.env.JWT_SECRET || 'secret';
 function initSocket(io) {
   io.use((socket, next) => {
     const { token } = socket.handshake.auth;
-    if (!token) return next(new Error('No token'));
+    if (!token) return next(new Error(msg.UNAUTHORIZED));
 
     try {
       const payload = verify(token, secret);
@@ -16,7 +17,7 @@ function initSocket(io) {
       socket.user = payload;
       return next();
     } catch {
-      return next(new Error('Invalid token'));
+      return next(new Error(msg.UNAUTHORIZED));
     }
   });
 

@@ -2,19 +2,21 @@
 const db = require('../models');
 
 const { User, Chat } = db;
+const msg = require('../utils/messages');
+const { serverError } = require('../utils/serverError');
 
 function registerChatHandlers(io, socket) {
   socket.on('chat:send', async ({ message }, callback) => {
     try {
       const { gameRoomId } = socket;
-      if (!gameRoomId) return callback({ error: 'Not in a room.' });
+      if (!gameRoomId) return callback({ error: msg.NOT_IN_ROOM });
 
       const trimmed = message?.trim();
-      if (!trimmed || trimmed.length > 500) return callback({ error: 'Invalid message.' });
+      if (!trimmed || trimmed.length > 500) return callback({ error: msg.INVALID_CHAT_MESSAGE });
 
       const sender = await User.findByPk(socket.user.id, { attributes: ['mutedUntil', 'name', 'avatarURL'] });
       if (sender?.mutedUntil && new Date(sender.mutedUntil) > new Date()) {
-        return callback({ error: 'Le vagy némítva.' });
+        return callback({ error: msg.MUTED });
       }
 
       const chat = await Chat.create({
@@ -32,7 +34,7 @@ function registerChatHandlers(io, socket) {
 
       return callback({ ok: true });
     } catch (err) {
-      return callback({ error: err.message });
+      return callback(serverError(err));
     }
   });
 }

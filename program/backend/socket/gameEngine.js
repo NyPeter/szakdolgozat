@@ -71,6 +71,8 @@ function initGameState(playerIds, roundNumber) {
     cserelap,
     isFirstTurn: true,
     discardDrawnCard: null,
+    // Where the current player drew from this turn: 'deck' | 'discard' | 'cserelap' | null.
+    drawSource: null,
     melds: [],
     // Auto-increment counter used to assign stable IDs to each laid meld.
     meldCounter: 0,
@@ -101,10 +103,28 @@ function getPlayerView(gameState, userId) {
     hands[id] = String(id) === String(userId) ? cards : { count: cards.length };
   }
 
+  // Only what a player is allowed to see is listed here. The discard pile is
+  // reduced to its top card ("a dobó halomban senki sem turkálhat").
+  const { discardPile } = gameState;
   return {
-    ...gameState,
+    players: gameState.players,
+    turnIndex: gameState.turnIndex,
+    phase: gameState.phase,
+    round: gameState.round,
+    turnTimerStartedAt: gameState.turnTimerStartedAt,
     hands,
     drawPile: { remaining: gameState.drawPile.length },
+    discardTop: discardPile.length > 0 ? discardPile[discardPile.length - 1] : null,
+    discardCount: discardPile.length,
+    cserelap: gameState.cserelap,
+    melds: gameState.melds,
+    isFirstTurn: gameState.isFirstTurn,
+    hasFirstMeld: gameState.hasFirstMeld,
+    firstMeldTurnPlayer: gameState.firstMeldTurnPlayer,
+    handolasBid: gameState.handolasBid,
+    discardDrawnCard: gameState.discardDrawnCard,
+    cserelapDrawn: gameState.cserelapDrawn,
+    swappedJoker: gameState.swappedJoker,
   };
 }
 
@@ -350,11 +370,12 @@ function canSwapJokerInMeld(meld, naturalCard, jokerId) {
 // Hand card values: number cards face value, J/Q/K = 10, Ace = 11, Joker = 15.
 function calculateRoundScores(gs, winnerId, isHandolas, isSzuroHand) {
   const scores = {};
+  const winner = String(winnerId);
   const doubles = isHandolas && !isSzuroHand;
   // eslint-disable-next-line no-restricted-syntax
   for (const playerId of gs.players) {
     const strId = String(playerId);
-    if (strId === winnerId) {
+    if (strId === winner) {
       scores[strId] = doubles ? -40 : -20;
     } else {
       const neverLaid = !gs.hasFirstMeld[strId];
