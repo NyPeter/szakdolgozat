@@ -10,6 +10,9 @@ const gameStates = new Map();
 const gameRoundData = new Map();
 // Active turn timers: gameId -> NodeJS.Timeout
 const turnTimers = new Map();
+// Waiting-room seats of disconnected players, kept for a short time so that a
+// page reload does not count as leaving: `${gameId}:${userId}` -> NodeJS.Timeout
+const leaveTimers = new Map();
 
 function getRoomSettings(gameId) {
   return roomSettings.get(gameId) ?? { maxPlayers: 6, password: null };
@@ -65,6 +68,7 @@ module.exports = {
   gameStates,
   gameRoundData,
   turnTimers,
+  leaveTimers,
   getRoomSettings,
   clearTurnTimer,
   saveTurnSnapshot,

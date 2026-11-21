@@ -7,7 +7,7 @@ const {
 const { Op } = db.Sequelize;
 const { describeUserError } = require('../utils/userErrors');
 const msg = require('../utils/messages');
-const { handleLeave, getGameState } = require('../socket/lobbyHandlers');
+const { leaveWaitingRooms, getGameState } = require('../socket/lobbyHandlers');
 
 module.exports = async (fastify) => {
   fastify.get('/user', { onRequest: [fastify.auth] }, async (request, reply) => {
@@ -80,15 +80,10 @@ module.exports = async (fastify) => {
 
     try {
       const { io } = fastify;
-      const sockets = (await io.fetchSockets()).filter((s) => s.user.id === id);
-
-      // Leave the waiting room like on a closed tab: the room goes to the next
-      // player, or is removed when nobody else is in it.
-      // eslint-disable-next-line no-restricted-syntax
-      for (const s of sockets) {
-        // eslint-disable-next-line no-await-in-loop
-        await handleLeave(io, s);
-      }
+      // Leave every waiting room like with "Kilépés": the room goes to the next
+      // player, or is removed when nobody else is in it. Found in the database,
+      // so a seat kept for a closed tab (leave timer) is included too.
+      await leaveWaitingRooms(io, id);
 
       await sequelize.transaction(async (transaction) => {
         await Chat.destroy({ where: { userID: id }, transaction });
@@ -124,6 +119,7 @@ module.exports = async (fastify) => {
         request.log.warn(err);
       }
 
+      const sockets = (await io.fetchSockets()).filter((s) => s.user.id === id);
       sockets.forEach((s) => s.disconnect(true));
 
       // Running games the user had surrendered in: refresh the player list.

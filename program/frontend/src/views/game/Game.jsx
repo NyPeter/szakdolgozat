@@ -23,6 +23,8 @@ export const Game = () => {
 
   const joinedGameIdRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const mountedRef = useRef(false);
+  const isWaitingRef = useRef(false);
 
   const [room, setRoom] = useState(null);
   const [error, setError] = useState('');
@@ -121,6 +123,11 @@ export const Game = () => {
       navigate('/Games');
     });
 
+    // Removed from this room because another tab joined or created a room
+    socket.on('game:left', () => {
+      navigate('/Games');
+    });
+
     const join = () => {
       socket.emit('game:join', { gameId, password: null }, (res) => {
         if (res.needsPassword) {
@@ -150,8 +157,26 @@ export const Game = () => {
       socket.off('game:roundOver');
       socket.off('game:over');
       socket.off('game:kicked');
+      socket.off('game:left');
     };
   }, [gameId]);
+
+  // Leaving this page while in the waiting room counts as "Kilépés"
+  // (a started game is kept, the player can come back to it).
+  isWaitingRef.current = isWaiting;
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      // In development StrictMode unmounts and remounts right away: wait a tick
+      // and only leave if the page really stayed unmounted.
+      setTimeout(() => {
+        if (!mountedRef.current && isWaitingRef.current) {
+          getSocket()?.emit('game:leave', {}, () => {});
+        }
+      }, 0);
+    };
+  }, []);
 
   const submitPassword = () => {
     const socket = getSocket();

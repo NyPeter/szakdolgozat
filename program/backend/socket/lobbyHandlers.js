@@ -7,7 +7,7 @@ const {
 } = db;
 
 const {
-  roomSettings, gameStates, gameRoundData, getRoomSettings, emitGameState,
+  roomSettings, gameStates, gameRoundData, leaveTimers, getRoomSettings, emitGameState,
 } = require('./store');
 
 const { initGameState, getPlayerView } = require('./gameEngine');
@@ -48,49 +48,106 @@ async function getGameState(gameId) {
   };
 }
 
+// How long a disconnected player keeps their waiting-room seat (page reload).
+const LEAVE_GRACE_MS = 10 * 1000;
+
+const leaveKey = (gameId, userId) => `${gameId}:${userId}`;
+
+function cancelLeaveTimer(gameId, userId) {
+  const key = leaveKey(gameId, userId);
+  const timer = leaveTimers.get(key);
+  if (timer) {
+    clearTimeout(timer);
+    leaveTimers.delete(key);
+  }
+}
+
+// Removes a player from a waiting room: the room goes to the next player, or is
+// deleted when nobody is left. The player's other tabs showing this room are sent
+// 'game:left'. Started and finished games are not touched (the seat is kept for
+// rejoining, and a finished game is the leaderboard's data).
+async function removeFromWaitingRoom(io, gameId, userId) {
+  cancelLeaveTimer(gameId, userId);
+
+  const game = await Game.findByPk(gameId);
+  if (!game || game.status !== 'waiting') return;
+
+  await GameUser.destroy({ where: { gameID: gameId, userID: userId } });
+
+  const sockets = await io.in(`game:${gameId}`).fetchSockets();
+  sockets
+    .filter((s) => String(s.user.id) === String(userId))
+    .forEach((s) => {
+      s.emit('game:left');
+      s.leave(`game:${gameId}`);
+      s.gameRoomId = null;
+    });
+
+  const updatedGame = await Game.findByPk(gameId, {
+    include: [{ model: User, as: 'Players', attributes: ['id'], through: { attributes: [] } }],
+  });
+  if (!updatedGame) return; // removed meanwhile by another leave
+
+  if (updatedGame.Players.length === 0) {
+    await updatedGame.destroy();
+    roomSettings.delete(gameId);
+    return;
+  }
+
+  if (String(updatedGame.ownerID) === String(userId)) {
+    await updatedGame.update({ ownerID: updatedGame.Players[0].id });
+  }
+
+  const state = await getGameState(gameId);
+  io.to(`game:${gameId}`).emit('game:update', state);
+}
+
+// This tab leaves its room ("Kilépés", or joining/creating another room).
 async function handleLeave(io, socket) {
   const { gameRoomId } = socket;
   if (!gameRoomId) return;
 
-  const game = await Game.findByPk(gameRoomId);
-  if (!game) {
-    socket.leave(`game:${gameRoomId}`);
-    socket.gameRoomId = null;
-    return;
-  }
-
-  if (game.status !== 'waiting') {
-    // Started: keep GameUser so the player can rejoin.
-    // Finished: keep everything, the result is the leaderboard's data.
-    socket.leave(`game:${gameRoomId}`);
-    socket.gameRoomId = null;
-    return;
-  }
-
-  // Waiting room: fully remove the player
-  await GameUser.destroy({ where: { gameID: gameRoomId, userID: socket.user.id } });
   socket.leave(`game:${gameRoomId}`);
   socket.gameRoomId = null;
+  await removeFromWaitingRoom(io, gameRoomId, socket.user.id);
+}
 
-  const updatedGame = await Game.findByPk(gameRoomId, {
-    include: [{ model: User, as: 'Players', attributes: ['id'], through: { attributes: [] } }],
+// One room per user: removes the user from every waiting room they have a seat in,
+// except `exceptGameId`. Based on the database, so seats held by other tabs or by
+// a pending leave timer are found too.
+async function leaveWaitingRooms(io, userId, exceptGameId = null) {
+  const seats = await GameUser.findAll({
+    where: { userID: userId },
+    include: [{ model: Game, where: { status: 'waiting' }, required: true }],
   });
-
-  if (!updatedGame) return;
-
-  if (updatedGame.Players.length === 0) {
-    await updatedGame.destroy();
-    roomSettings.delete(gameRoomId);
-    return;
+  // eslint-disable-next-line no-restricted-syntax
+  for (const seat of seats) {
+    // String(): the id from the client is not guaranteed to be a number
+    if (String(seat.gameID) !== String(exceptGameId)) {
+      // eslint-disable-next-line no-await-in-loop
+      await removeFromWaitingRoom(io, seat.gameID, userId);
+    }
   }
+}
 
-  if (updatedGame.ownerID === socket.user.id) {
-    const newOwnerId = updatedGame.Players[0]?.id;
-    if (newOwnerId) await updatedGame.update({ ownerID: newOwnerId });
-  }
-
-  const state = await getGameState(gameRoomId);
-  io.to(`game:${gameRoomId}`).emit('game:update', state);
+// A tab in a room was closed or reloaded. The seat is kept for LEAVE_GRACE_MS,
+// and counts as taken for everything meanwhile; then the player is removed
+// unless one of their tabs is in the room again.
+function scheduleLeave(io, gameId, userId) {
+  cancelLeaveTimer(gameId, userId);
+  const timer = setTimeout(async () => {
+    leaveTimers.delete(leaveKey(gameId, userId));
+    try {
+      const sockets = await io.in(`game:${gameId}`).fetchSockets();
+      if (sockets.some((s) => String(s.user.id) === String(userId))) return;
+      await removeFromWaitingRoom(io, gameId, userId);
+    } catch (err) {
+      // no client to answer here, so only log it
+      // eslint-disable-next-line no-console
+      console.error(err);
+    }
+  }, LEAVE_GRACE_MS);
+  leaveTimers.set(leaveKey(gameId, userId), timer);
 }
 
 // Tracks user IDs currently inside game:create to prevent duplicate rooms
@@ -104,8 +161,6 @@ function registerLobbyHandlers(io, socket) {
     }
     creatingUsers.add(socket.user.id);
     try {
-      await handleLeave(io, socket);
-
       // Block creating a room while in an active game
       const activeGU = await GameUser.findOne({
         where: { userID: socket.user.id, isSurrendered: false },
@@ -115,12 +170,10 @@ function registerLobbyHandlers(io, socket) {
         return callback({ error: msg.ACTIVE_GAME });
       }
 
-      const existing = await Game.findOne({
-        where: { status: 'waiting', ownerID: socket.user.id },
-      });
-      if (existing) {
-        return callback({ error: msg.ROOM_ALREADY_OPEN });
-      }
+      // One room per user: creating a room leaves the previous one
+      // (this tab's, and any other tab's or reloaded page's seat).
+      await handleLeave(io, socket);
+      await leaveWaitingRooms(io, socket.user.id);
 
       const game = await Game.create({ status: 'waiting', ownerID: socket.user.id });
       await GameUser.create({ gameID: game.id, userID: socket.user.id });
@@ -194,21 +247,27 @@ function registerLobbyHandlers(io, socket) {
         return callback({ error: msg.ACTIVE_GAME });
       }
 
-      // Waiting room join — leave current room first
-      if (socket.gameRoomId && socket.gameRoomId !== gameId) {
-        await handleLeave(io, socket);
+      // Already a player here (page reload, second tab): this is a return, so no
+      // password or "room full" check, the seat was never given up.
+      const seat = await GameUser.findOne({ where: { gameID: gameId, userID: socket.user.id } });
+      if (!seat) {
+        if (settings.password && settings.password !== password) {
+          return callback({ error: msg.WRONG_PASSWORD, needsPassword: true });
+        }
+        if (game.Players.length >= settings.maxPlayers) {
+          return callback({ error: msg.ROOM_FULL });
+        }
       }
 
-      if (settings.password && settings.password !== password) {
-        return callback({ error: msg.WRONG_PASSWORD, needsPassword: true });
-      }
-      if (game.Players.length >= settings.maxPlayers) {
-        return callback({ error: msg.ROOM_FULL });
-      }
+      // One room per user: leave this tab's previous room and any other waiting
+      // room (another tab's, or one kept for a reloaded page). After the checks,
+      // so a failed join does not cost the current seat.
+      await handleLeave(io, socket);
+      await leaveWaitingRooms(io, socket.user.id, gameId);
 
-      const [, created] = await GameUser.findOrCreate({
-        where: { gameID: gameId, userID: socket.user.id },
-      });
+      if (!seat) await GameUser.create({ gameID: gameId, userID: socket.user.id });
+      cancelLeaveTimer(gameId, socket.user.id);
+      const created = !seat;
 
       socket.gameRoomId = gameId;
       socket.join(`game:${gameId}`);
@@ -275,14 +334,17 @@ function registerLobbyHandlers(io, socket) {
       }
 
       await GameUser.destroy({ where: { gameID: gameRoomId, userID: targetUserId } });
+      cancelLeaveTimer(gameRoomId, targetUserId);
 
+      // every tab of the kicked player that shows this room
       const sockets = await io.in(`game:${gameRoomId}`).fetchSockets();
-      const kicked = sockets.find((s) => String(s.user.id) === String(targetUserId));
-      if (kicked) {
-        kicked.emit('game:kicked');
-        kicked.leave(`game:${gameRoomId}`);
-        kicked.gameRoomId = null;
-      }
+      sockets
+        .filter((s) => String(s.user.id) === String(targetUserId))
+        .forEach((kicked) => {
+          kicked.emit('game:kicked');
+          kicked.leave(`game:${gameRoomId}`);
+          kicked.gameRoomId = null;
+        });
 
       const state = await getGameState(gameRoomId);
       io.to(`game:${gameRoomId}`).emit('game:update', state);
@@ -330,15 +392,12 @@ function registerLobbyHandlers(io, socket) {
     }
   });
 
-  socket.on('disconnect', async () => {
-    if (socket.gameRoomId) {
-      try {
-        await handleLeave(io, socket);
-      } catch {
-        // ignore cleanup errors on disconnect
-      }
-    }
+  // Closed or reloaded tab: not a leave yet, the seat is kept for a few seconds.
+  socket.on('disconnect', () => {
+    if (socket.gameRoomId) scheduleLeave(io, socket.gameRoomId, socket.user.id);
   });
 }
 
-module.exports = { registerLobbyHandlers, handleLeave, getGameState };
+module.exports = {
+  registerLobbyHandlers, handleLeave, leaveWaitingRooms, getGameState,
+};

@@ -39,7 +39,6 @@ const messages = {
   NOT_IN_ROOM: 'Nem vagy szobában.',
   ROOM_NOT_FOUND: 'A szoba nem található.',
   ROOM_CREATE_IN_PROGRESS: 'A szoba létrehozása már folyamatban van.',
-  ROOM_ALREADY_OPEN: 'Már van egy nyitott szobád.',
   ROOM_FULL: 'A szoba megtelt.',
   GAME_FINISHED: 'Ez a játék már véget ért.',
   GAME_ALREADY_STARTED: 'A játék már elindult.',
