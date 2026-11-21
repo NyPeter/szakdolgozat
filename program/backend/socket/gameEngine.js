@@ -234,8 +234,8 @@ const SUIT_ORDER = ['clubs', 'diamonds', 'hearts', 'spades'];
 //
 //   Set  → sorted by suit (clubs → diamonds → hearts → spades); joker appended
 //          at the end since it substitutes an unspecified suit.
-//   Run  → sorted ascending by rank. Low-Ace orientation (A-2-3…) is detected
-//          when both Ace and 2 are present. The joker is inserted at the one
+//   Run  → sorted ascending by rank. The Ace is low (A-2-3…, A-Joker-3) when the
+//          run is only valid that way (see isValidRun). The joker is inserted at the one
 //          gap between natural cards; if there is no internal gap (all naturals
 //          are already consecutive), it is appended at the high end.
 function sortMeldCards(cards, type) {
@@ -249,10 +249,11 @@ function sortMeldCards(cards, type) {
     return [...sorted, ...jokers];
   }
 
-  // Run: detect low-Ace orientation when both Ace and 2 are present.
+  // Run: the Ace is low when the run cannot be formed with a high Ace.
+  // (Checking for a 2 is not enough: in A-Joker-3 the joker stands for the 2.)
   const hasAce = natural.some((c) => c.rank === 'Ace');
-  const has2 = natural.some((c) => c.rank === '2');
-  const lowAce = hasAce && has2;
+  const highIndices = natural.map((c) => RANK_ORDER.indexOf(c.rank));
+  const lowAce = hasAce && !canFormRun(highIndices, cards.length, false);
   const getIdx = (c) => (lowAce && c.rank === 'Ace' ? -1 : RANK_ORDER.indexOf(c.rank));
 
   const sorted = [...natural].sort((a, b) => getIdx(a) - getIdx(b));
