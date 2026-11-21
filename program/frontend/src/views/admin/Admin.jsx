@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Alert, Button, Container, Table, Form, InputGroup,
 } from 'react-bootstrap';
@@ -12,11 +12,13 @@ function formatDate(iso) {
   return d.toLocaleDateString('hu-HU');
 }
 
-function ActionCell({ userId, field, currentValue, onDone, onError }) {
+function ActionCell({
+  userId, field, currentValue, onDone, onError,
+}) {
   const [days, setDays] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
   const endpoint = `${api}/admin/user/${userId}/${field}`;
   const token = localStorage.getItem('accessToken');
@@ -88,11 +90,10 @@ export const Admin = () => {
   const [actionError, setActionError] = useState('');
   const navigate = useNavigate();
 
-  const token = localStorage.getItem('accessToken');
-  const headers = { Authorization: `Bearer ${token}` };
-
   const fetchUsers = useCallback(async (p, name) => {
     try {
+      const token = localStorage.getItem('accessToken');
+      const headers = { Authorization: `Bearer ${token}` };
       const params = name ? { name } : {};
       const res = await axios.get(`http://localhost:4000/admin/users/${p}`, { headers, params });
       setUsers(res.data.users);
@@ -100,9 +101,9 @@ export const Admin = () => {
     } catch {
       navigate('/');
     }
-  }, []);
+  }, [navigate]);
 
-  useEffect(() => { fetchUsers(page, search); }, [page, search]);
+  useEffect(() => { fetchUsers(page, search); }, [fetchUsers, page, search]);
 
   const handleSearch = (e) => {
     e.preventDefault();

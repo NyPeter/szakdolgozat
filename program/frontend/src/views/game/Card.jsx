@@ -1,5 +1,3 @@
-import React from 'react';
-
 // Maps the rank values used in the game state to the filename segment used
 // by the SVG-cards-1.3 deck. Number cards already match ('2' → '2'), so only
 // face cards and the ace need an explicit mapping.
@@ -20,6 +18,12 @@ function cardSrc(card) {
   return `/SVG-cards-1.3/${rank}_of_${card.suit}.svg`;
 }
 
+function cardAlt(card, faceDown) {
+  if (faceDown) return 'Kártya háta';
+  if (card.rank === 'Joker') return 'Joker';
+  return `${card.rank} ${card.suit}`;
+}
+
 // A single playing card.
 //
 // Props:
@@ -34,12 +38,9 @@ function cardSrc(card) {
 export function Card({
   card, faceDown = false, selected = false, mustUse = false, isNew = false, onClick, style,
 }) {
-  const src = faceDown ? '/Card_back.svg' : (card ? cardSrc(card) : null);
-  if (!src) return null;
-
-  const altText = faceDown ? 'Kártya háta'
-    : card.rank === 'Joker' ? 'Joker'
-      : `${card.rank} ${card.suit}`;
+  if (!faceDown && !card) return null;
+  const src = faceDown ? '/Card_back.svg' : cardSrc(card);
+  const altText = cardAlt(card, faceDown);
 
   const cls = [
     'card-wrapper',

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Badge, Button } from 'react-bootstrap';
 
 export function GameOver({ data, playerNames, onClose }) {

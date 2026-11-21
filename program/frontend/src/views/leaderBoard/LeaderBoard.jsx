@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Button, Container, Table, Spinner } from "react-bootstrap";
-import "./LeaderBoard.css";
-import axios from "axios";
+import { useCallback, useEffect, useState } from 'react';
+import {
+  Button, Container, Table, Spinner,
+} from 'react-bootstrap';
+import './LeaderBoard.css';
+import axios from 'axios';
 
 export const LeaderBoard = () => {
   const [page, setPage] = useState(1);
@@ -9,12 +11,12 @@ export const LeaderBoard = () => {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const loadData = async (p) => {
+  const loadData = useCallback(async (p) => {
     setLoading(true);
-    const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
+    const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem('accessToken');
 
       const { data } = await axios.get(
         `${api}/leaderboard/${p}`,
@@ -22,21 +24,21 @@ export const LeaderBoard = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       setRows(data.rows);
       setCount(data.count);
     } catch (err) {
-      console.error("Leaderboard error:", err);
+      console.error('Leaderboard error:', err);
     }
 
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     loadData(page);
-  }, [page]);
+  }, [page, loadData]);
 
   const nextPage = () => {
     if (page * 10 < count) setPage(page + 1);

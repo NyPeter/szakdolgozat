@@ -10,7 +10,7 @@ const {
   roomSettings, gameStates, gameRoundData, leaveTimers, getRoomSettings, emitGameState,
 } = require('./store');
 
-const { initGameState, getPlayerView } = require('./gameEngine');
+const { initGameState } = require('./gameEngine');
 const { startTurnTimer } = require('./gameHandlers');
 const msg = require('../utils/messages');
 const { serverError } = require('../utils/serverError');
@@ -77,10 +77,10 @@ async function removeFromWaitingRoom(io, gameId, userId) {
   const sockets = await io.in(`game:${gameId}`).fetchSockets();
   sockets
     .filter((s) => String(s.user.id) === String(userId))
-    .forEach((s) => {
-      s.emit('game:left');
-      s.leave(`game:${gameId}`);
-      s.gameRoomId = null;
+    .forEach((tabSocket) => {
+      tabSocket.emit('game:left');
+      tabSocket.leave(`game:${gameId}`);
+      tabSocket.gameRoomId = null;
     });
 
   const updatedGame = await Game.findByPk(gameId, {
@@ -340,10 +340,10 @@ function registerLobbyHandlers(io, socket) {
       const sockets = await io.in(`game:${gameRoomId}`).fetchSockets();
       sockets
         .filter((s) => String(s.user.id) === String(targetUserId))
-        .forEach((kicked) => {
-          kicked.emit('game:kicked');
-          kicked.leave(`game:${gameRoomId}`);
-          kicked.gameRoomId = null;
+        .forEach((kickedSocket) => {
+          kickedSocket.emit('game:kicked');
+          kickedSocket.leave(`game:${gameRoomId}`);
+          kickedSocket.gameRoomId = null;
         });
 
       const state = await getGameState(gameRoomId);

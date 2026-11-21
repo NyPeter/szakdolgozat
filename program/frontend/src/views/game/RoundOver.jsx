@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge, Button } from 'react-bootstrap';
 
 const AUTO_DISMISS_SECONDS = 6;
@@ -14,6 +14,9 @@ export function RoundOver({ data, playerNames, onDismiss }) {
       });
     }, 1000);
     return () => clearInterval(id);
+    // Started once: the parent passes a new onDismiss on every render, which
+    // would restart the countdown each time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const sorted = Object.entries(data.totalScores).sort((a, b) => a[1] - b[1]);

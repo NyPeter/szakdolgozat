@@ -1,6 +1,6 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './views/App.jsx'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './views/App';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { connectSocket } from './socket';
 
@@ -11,4 +11,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-)
+);

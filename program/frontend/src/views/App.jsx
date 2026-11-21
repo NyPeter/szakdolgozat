@@ -1,5 +1,6 @@
-import { useState, useContext } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import {
+  BrowserRouter, Navigate, Route, Routes,
+} from 'react-router';
 
 import { Menu } from './menu/Menu';
 import { Login } from './login/Login';
@@ -12,11 +13,9 @@ import { Game } from './game/Game';
 import { Profile } from './profile/Profile';
 import { Admin } from './admin/Admin';
 
-
 function App() {
-
   return (
-    <>      
+    <>
       <BrowserRouter>
         <Routes>
           <Route index element={<Menu />} />
@@ -31,7 +30,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

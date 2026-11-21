@@ -1,6 +1,4 @@
-import React, {
-  useEffect, useRef, useState,
-} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import axios from 'axios';
 import {
@@ -12,7 +10,7 @@ import { RoundOver } from './RoundOver';
 import { GameOver } from './GameOver';
 import './Game.css';
 
-const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export const Game = () => {
   const { id } = useParams();
@@ -58,7 +56,7 @@ export const Game = () => {
     axios.get(`${api}/user`, { headers: { Authorization: `Bearer ${token}` } })
       .then(({ data }) => setUserId(data.user.id))
       .catch(() => navigate('/Login'));
-  }, []);
+  }, [navigate]);
 
   // Warn before tab close during active game
   useEffect(() => {
@@ -81,7 +79,7 @@ export const Game = () => {
     const socket = getSocket();
     if (!socket) {
       navigate('/Games');
-      return;
+      return undefined;
     }
 
     socket.on('game:joined', (state) => {
@@ -94,7 +92,8 @@ export const Game = () => {
 
     socket.on('game:update', (state) => {
       setRoom(state);
-      if (isOwner) setSettingsMaxPlayers(state.maxPlayers);
+      // Keep the slider at the saved value, also for a player who becomes the owner.
+      setSettingsMaxPlayers(state.maxPlayers);
     });
 
     socket.on('game:started', () => {
@@ -159,7 +158,7 @@ export const Game = () => {
       socket.off('game:kicked');
       socket.off('game:left');
     };
-  }, [gameId]);
+  }, [gameId, navigate]);
 
   // Leaving this page while in the waiting room counts as "Kilépés"
   // (a started game is kept, the player can come back to it).
@@ -351,17 +350,19 @@ export const Game = () => {
       )}
 
       <div className="game-room-header">
-        {isWaiting ? (
+        {/* Waiting room: leave. Running game: surrender. Finished: an empty
+            placeholder keeps the title centred. */}
+        {isWaiting && (
           <Button variant="secondary" onClick={handleLeave} className="game-room-btn">
             Kilépés
           </Button>
-        ) : gameOverData ? (
-          <div className="game-room-btn" />
-        ) : (
+        )}
+        {!isWaiting && !gameOverData && (
           <Button variant="danger" onClick={() => setShowSurrender(true)} className="game-room-btn">
             Feladás
           </Button>
         )}
+        {!isWaiting && gameOverData && <div className="game-room-btn" />}
 
         <h1 className="game-room-title">
           {isWaiting ? 'Váróterem' : 'Játék'}

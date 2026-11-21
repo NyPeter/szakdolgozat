@@ -23,5 +23,15 @@ module.exports = {
       },
     ],
     'no-plusplus': 'off',
+    // Airbnb's list, plus Socket.IO sockets: per-connection data is stored on
+    // the socket itself (socket.user, socket.gameRoomId), which is the intended use.
+    'no-param-reassign': ['error', {
+      props: true,
+      ignorePropertyModificationsFor: [
+        'acc', 'accumulator', 'e', 'ctx', 'context', 'req', 'request', 'res', 'response',
+        '$scope', 'staticContext',
+        'socket', 'tabSocket', 'kickedSocket',
+      ],
+    }],
   },
 };

@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router';
 import axios from 'axios';
 
+const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
 export const AdminRoute = ({ children }) => {
   const token = localStorage.getItem('accessToken');
   const [status, setStatus] = useState('loading'); // 'loading' | 'ok' | 'deny'
-  const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
   useEffect(() => {
     if (!token) { setStatus('deny'); return; }

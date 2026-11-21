@@ -10,7 +10,12 @@ module.exports = {
   ],
   ignorePatterns: ['dist', '.eslintrc.cjs'],
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-  settings: { react: { version: '18.2' } },
+  settings: {
+    react: { version: '18.2' },
+    'import/resolver': {
+      node: { extensions: ['.js', '.jsx'] },
+    },
+  },
   plugins: ['react-refresh'],
   rules: {
     'react/jsx-no-target-blank': 'off',
@@ -18,20 +23,18 @@ module.exports = {
       'warn',
       { allowConstantExport: true },
     ],
+    // The components take plain props; the project does not use PropTypes.
+    'react/prop-types': 'off',
+    // Views are named exports (export function Login), which is intentional.
+    'import/prefer-default-export': 'off',
+    // Failed requests are logged for debugging; console.log is still reported.
+    'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
-  settings: {
-    'import/resolver': {
-      node: {
-        paths: ['src'],
-        extensions: ['.js', '.jsx', '.ts', '.d.ts', '.tsx'],
-      },
-      typescript: {
-        project: './tsconfig.json',
-      },
-      alias: {
-        map: [['~', path.resolve(__dirname, './src')]],
-        extensions: ['.js', '.jsx', '.ts', '.d.ts', '.tsx'],
-      },
+  overrides: [
+    {
+      // Build-time config: its imports are devDependencies on purpose.
+      files: ['vite.config.js'],
+      rules: { 'import/no-extraneous-dependencies': ['error', { devDependencies: true }] },
     },
-  },
+  ],
 }

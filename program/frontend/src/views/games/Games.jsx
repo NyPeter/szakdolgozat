@@ -1,9 +1,13 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router";
-import { Alert, Button, Container, Table, Spinner } from "react-bootstrap";
-import { getSocket } from "../../socket";
-import "./Games.css";
+import { useCallback, useEffect, useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router';
+import {
+  Alert, Button, Container, Table, Spinner,
+} from 'react-bootstrap';
+import { getSocket } from '../../socket';
+import './Games.css';
+
+const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export const Games = () => {
   const [page, setPage] = useState(1);
@@ -11,14 +15,13 @@ export const Games = () => {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [myActiveGame, setMyActiveGame] = useState(null);
-  const [createError, setCreateError] = useState("");
+  const [createError, setCreateError] = useState('');
   const navigate = useNavigate();
-  const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-  const loadData = async (p) => {
+  const loadData = useCallback(async (p) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem('accessToken');
       const { data } = await axios.get(`${api}/games/${p}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -26,14 +29,14 @@ export const Games = () => {
       setCount(data.count);
       setMyActiveGame(data.myActiveGame ?? null);
     } catch (err) {
-      console.error("Games list error:", err);
+      console.error('Games list error:', err);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     loadData(page);
-  }, [page]);
+  }, [page, loadData]);
 
   const nextPage = () => {
     if (page * 10 < count) setPage(page + 1);
@@ -50,8 +53,8 @@ export const Games = () => {
   const createGame = () => {
     const socket = getSocket();
     if (!socket) return;
-    setCreateError("");
-    socket.emit("game:create", {}, (res) => {
+    setCreateError('');
+    socket.emit('game:create', {}, (res) => {
       if (res.error) {
         setCreateError(res.error);
         return;
@@ -75,14 +78,16 @@ export const Games = () => {
       </div>
 
       {createError && (
-        <Alert variant="danger" dismissible onClose={() => setCreateError("")}>
+        <Alert variant="danger" dismissible onClose={() => setCreateError('')}>
           {createError}
         </Alert>
       )}
 
       {myActiveGame && (
         <Alert variant="warning" className="d-flex align-items-center justify-content-between">
-          <span>Van egy folyamatban lévő játékod (tulajdonos: <strong>{myActiveGame.owner}</strong>)!</span>
+          <span>
+            Van egy folyamatban lévő játékod (tulajdonos: <strong>{myActiveGame.owner}</strong>)!
+          </span>
           <Button size="sm" variant="warning" onClick={() => navigate(`/Game/${myActiveGame.id}`)}>
             Visszatérés
           </Button>
@@ -110,16 +115,16 @@ export const Games = () => {
                     <td>{game.id}</td>
                     <td>
                       {game.owner}
-                      {game.hasPassword && " 🔒"}
+                      {game.hasPassword && ' 🔒'}
                     </td>
                     <td>{game.playerCount}/{game.maxPlayers}</td>
                     <td>
                       <Button
-                        variant={full ? "secondary" : "success"}
+                        variant={full ? 'secondary' : 'success'}
                         disabled={full}
                         onClick={() => joinGame(game.id)}
                       >
-                        {full ? "Tele" : "Csatlakozás"}
+                        {full ? 'Tele' : 'Csatlakozás'}
                       </Button>
                     </td>
                   </tr>

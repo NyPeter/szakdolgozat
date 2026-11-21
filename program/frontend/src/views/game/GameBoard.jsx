@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge, Button, ButtonGroup } from 'react-bootstrap';
 
-const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
+import { getSocket } from '../../socket';
+import { Card } from './Card';
+import './GameBoard.css';
+
+const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 // ── Hand sorting ────────────────────────────────────────────────────────────
-const RANK_ORDER = ['2','3','4','5','6','7','8','9','10','Jack','Queen','King','Ace','Joker'];
-const SUIT_ORDER = ['clubs','diamonds','hearts','spades'];
+const RANK_ORDER = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace', 'Joker'];
+const SUIT_ORDER = ['clubs', 'diamonds', 'hearts', 'spades'];
 
 function sortBySuit(cards) {
   return [...cards].sort((a, b) => {
@@ -26,10 +30,6 @@ function sortByRank(cards) {
     return sa - sb;
   });
 }
-
-import { getSocket } from '../../socket';
-import { Card } from './Card';
-import './GameBoard.css';
 
 const TURN_SECONDS = 60;
 
@@ -271,9 +271,8 @@ export function GameBoard({ room, gameState: gs, userId }) {
         {opponents.map((id) => {
           const strId = String(id);
           const handData = gs.hands[strId];
-          const count = typeof handData?.count === 'number'
-            ? handData.count
-            : (Array.isArray(handData) ? handData.length : 0);
+          // Opponents' hands arrive as { count }, a full hand would be an array.
+          const count = handData?.count ?? handData?.length ?? 0;
           const isActive = strId === currentPlayerId;
           const hasSurrendered = surrendered.includes(strId);
 
@@ -419,7 +418,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
           {pendingGroups.length > 0 && (
             <div className="gb-pending">
               {pendingGroups.map((ids, i) => (
-                // eslint-disable-next-line react/no-array-index-key
                 <span key={i} className="gb-pending-group">
                   {ids.length} lapos csoport
                 </span>
@@ -442,11 +440,10 @@ export function GameBoard({ room, gameState: gs, userId }) {
             && (selectedCards.size === 0 || selectedCards.size >= 3) && (
             <Button variant="success" size="sm" onClick={handleMeld}>
               Lerak
-              {pendingGroups.length > 0 && selectedCards.size >= 3
-                ? ` (${pendingGroups.length + 1} csoport)`
-                : pendingGroups.length > 0
-                  ? ` (${pendingGroups.length} csoport)`
-                  : ` (${selectedCards.size} lap)`}
+              {/* the current selection counts as one more group when it has 3+ cards */}
+              {pendingGroups.length > 0
+                ? ` (${pendingGroups.length + Number(selectedCards.size >= 3)} csoport)`
+                : ` (${selectedCards.size} lap)`}
             </Button>
           )}
 

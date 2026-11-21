@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Container } from 'react-bootstrap';
 import axios from 'axios';
 import './Menu.css';
 
+const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 export const Menu = () => {
   const token = localStorage.getItem('accessToken');
   const isLoggedIn = !!token;
   const [isAdmin, setIsAdmin] = useState(false);
-  const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
   useEffect(() => {
     if (!token) return;

@@ -1,19 +1,19 @@
-import React, { useState } from "react";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import Alert from "react-bootstrap/Alert";
-import { Link, useNavigate } from "react-router";
-import axios from "axios";
-import { connectSocket } from "../../socket";
-import "./Login.css";
+import { useState } from 'react';
+import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
+import Alert from 'react-bootstrap/Alert';
+import { Link, useNavigate } from 'react-router';
+import axios from 'axios';
+import { connectSocket } from '../../socket';
+import './Login.css';
 
 export const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
   const navigate = useNavigate();
-  const api = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
   function validateForm() {
     return email.length > 0 && password.length > 0;
@@ -32,14 +32,14 @@ export const Login = () => {
       const token = response?.data?.token;
 
       if (token) {
-        window.localStorage.setItem("accessToken", token);
+        window.localStorage.setItem('accessToken', token);
         connectSocket();
-        navigate("/");
+        navigate('/');
       } else {
-        setError("Hibás belépési adatok.");
+        setError('Hibás belépési adatok.');
       }
     } catch (err) {
-      setError(err.response?.data?.message ?? "Nem sikerült elérni a szervert, próbáld újra.");
+      setError(err.response?.data?.message ?? 'Nem sikerült elérni a szervert, próbáld újra.');
     }
   }
 

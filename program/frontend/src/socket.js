@@ -11,6 +11,8 @@ export function connectSocket() {
     transports: ['websocket'],
   });
 
+  // Dev-only handle for the browser console (game:devPreset); the underscore marks it as internal.
+  // eslint-disable-next-line no-underscore-dangle
   if (import.meta.env.DEV) window._socket = socket;
 }
 
