@@ -15,6 +15,9 @@ const { startTurnTimer } = require('./gameHandlers');
 const msg = require('../utils/messages');
 const { serverError } = require('../utils/serverError');
 
+// How many of the latest chat messages a player gets when joining a room.
+const CHAT_HISTORY_LIMIT = 1000;
+
 async function getGameState(gameId) {
   const game = await Game.findByPk(gameId, {
     include: [
@@ -24,12 +27,14 @@ async function getGameState(gameId) {
   });
   if (!game) return null;
 
-  const chatHistory = await Chat.findAll({
+  // The latest CHAT_HISTORY_LIMIT messages: fetched newest first so the limit
+  // cuts off the old ones, then reversed to show them in chronological order.
+  const chatHistory = (await Chat.findAll({
     where: { gameID: gameId },
     include: [{ model: User, attributes: ['id', 'name', 'avatarURL'] }],
-    order: [['createdAt', 'ASC']],
-    limit: 100,
-  });
+    order: [['createdAt', 'DESC'], ['id', 'DESC']],
+    limit: CHAT_HISTORY_LIMIT,
+  })).reverse();
 
   const settings = getRoomSettings(gameId);
   return {
