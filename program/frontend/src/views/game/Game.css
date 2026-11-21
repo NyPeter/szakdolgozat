@@ -115,6 +115,13 @@ body {
   padding-right: 4px;
 }
 
+/* Thin scrollbar: the standard properties (Firefox, Chrome/Edge 121+),
+   the ::-webkit-scrollbar rules for Safari, which lacks scrollbar-color */
+.chat-messages {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
 .chat-messages::-webkit-scrollbar {
   width: 6px;
 }

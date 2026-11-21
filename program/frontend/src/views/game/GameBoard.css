@@ -166,6 +166,13 @@
   padding: 8px;
 }
 
+/* Thin scrollbar: the standard properties (Firefox, Chrome/Edge 121+),
+   the ::-webkit-scrollbar rules for Safari, which lacks scrollbar-color */
+.gb-melds {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
 .gb-melds::-webkit-scrollbar {
   height: 6px;
 }
@@ -248,6 +255,11 @@
   overflow-y: visible;
   padding-top: 14px;
   padding-bottom: 6px;
+}
+
+.gb-hand {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .gb-hand::-webkit-scrollbar {
