@@ -47,8 +47,22 @@ function shuffle(deck) {
   return deck;
 }
 
+// The swap card is taken from the top of the deck (the end of the array, where
+// draws come from too). It must be a natural card ("Cserelapként az első
+// természetes lap lesz felütve"): a joker goes back to a random place in the
+// deck, anywhere below the current top card (down to the very bottom).
+function drawSwapCard(deck) {
+  let card = deck.pop();
+  while (card.rank === 'Joker') {
+    // An index in 0 … length - 1 inserts before an existing card, so never on top.
+    deck.splice(Math.floor(Math.random() * deck.length), 0, card);
+    card = deck.pop();
+  }
+  return card;
+}
+
 function dealCards(deck, playerIds) {
-  const swapCard = deck.pop();
+  const swapCard = drawSwapCard(deck);
   const hands = {};
   playerIds.forEach((id, index) => {
     const count = index === 0 ? 15 : 14;
