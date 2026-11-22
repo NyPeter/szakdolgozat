@@ -420,6 +420,9 @@ function calculateRoundScores(gs, winnerId, isGoOutFromHand, isGoOutFromHandWith
 }
 
 module.exports = {
+  createDeck,
+  dealCards,
+  drawSwapCard,
   initGameState,
   getPlayerView,
   shuffle,
