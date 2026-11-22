@@ -9,6 +9,7 @@
     "test": {
         "dialect": "sqlite",
         "storage": "database/test_database.sqlite",
+        "logging": false,
         "dialectOptions": {
             "busyTimeout": 5000
         }

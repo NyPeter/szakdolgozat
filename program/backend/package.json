@@ -21,7 +21,8 @@
     "jsdoc": "^4.0.2",
     "nodemon": "^3.1.0",
     "rimraf": "^5.0.5",
-    "sequelize-cli": "^6.6.2"
+    "sequelize-cli": "^6.6.2",
+    "socket.io-client": "^4.8.4"
   },
   "dependencies": {
     "@fastify/autoload": "^5.8.0",
@@ -40,5 +41,13 @@
     "socket.io": "^4.7.5",
     "sqlite3": "^5.1.7",
     "uuid": "^9.0.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "maxWorkers": 1,
+    "testTimeout": 15000,
+    "globalSetup": "./tests/setup/globalSetup.js",
+    "globalTeardown": "./tests/setup/globalTeardown.js",
+    "setupFiles": ["./tests/setup/env.js"]
   }
 }

@@ -54,7 +54,8 @@ async function getGameState(gameId) {
 }
 
 // How long a disconnected player keeps their waiting-room seat (page reload).
-const LEAVE_GRACE_MS = 10 * 1000;
+// The tests shorten it with LEAVE_GRACE_MS so they do not wait 10 s each time.
+const LEAVE_GRACE_MS = Number(process.env.LEAVE_GRACE_MS) || 10 * 1000;
 
 const leaveKey = (gameId, userId) => `${gameId}:${userId}`;
 
