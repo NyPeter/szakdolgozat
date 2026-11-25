@@ -1,8 +1,12 @@
 const msg = require('./messages');
 
-// Turns a Sequelize error raised while creating or updating a User into an
-// HTTP status and a message from the catalogue.
-// eslint-disable-next-line jsdoc/require-jsdoc
+/**
+ * Turns a Sequelize error raised while creating or updating a User into an
+ * HTTP status and a message from the catalogue.
+ *
+ * @param {Error} err - Error thrown by User.create or user.update.
+ * @returns {object} `{ status, message }`.
+ */
 function describeUserError(err) {
   const field = err.errors?.[0]?.path;
 
@@ -16,7 +20,6 @@ function describeUserError(err) {
     return { status: 400, message: msg.INVALID_DATA };
   }
 
-  // eslint-disable-next-line no-console
   console.error(err);
   return { status: 500, message: msg.SERVER_ERROR };
 }

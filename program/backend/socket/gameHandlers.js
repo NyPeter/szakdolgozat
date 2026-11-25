@@ -1,7 +1,3 @@
-/* eslint-disable object-curly-newline */
-/* eslint-disable jsdoc/require-jsdoc */
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-use-before-define */
 const db = require('../models');
 
 const { Game, GameUser } = db;
@@ -22,8 +18,12 @@ const { serverError } = require('../utils/serverError');
 
 const TURN_TIMEOUT_MS = 60_000;
 
-// ── Turn advance helper ───────────────────────────────────────────────────────
-// Skips surrendered players when advancing the turn index.
+/**
+ * Moves the turn to the next player who has not surrendered.
+ *
+ * @param {object} gs - Game state.
+ * @param {Array<string>} [surrendered] - Ids of surrendered players.
+ */
 function advanceTurn(gs, surrendered) {
   const s = surrendered ?? [];
   let next = (gs.turnIndex + 1) % gs.players.length;
@@ -41,8 +41,14 @@ function advanceTurn(gs, surrendered) {
   gs.phase = 'draw';
 }
 
-// Clears everything that belongs to the turn that just ended and passes the
-// turn to the next active player.
+/**
+ * Clears everything that belongs to the turn that just ended and passes the
+ * turn to the next active player.
+ *
+ * @param {object} gs - Game state.
+ * @param {string} userId - The player whose turn ended.
+ * @param {Array<string>} [surrendered] - Ids of surrendered players.
+ */
 function endTurn(gs, userId, surrendered) {
   advanceTurn(gs, surrendered);
   gs.discardDrawnCard = null;
@@ -56,9 +62,14 @@ function endTurn(gs, userId, surrendered) {
   gs.layOffHistory = [];
 }
 
-// Draws the top card of the deck into the player's hand. When the deck is empty,
-// the discard pile (minus its top card) is reshuffled and becomes the new deck.
-// Returns the drawn card, or null when there is nothing left to draw.
+/**
+ * Draws the top card of the deck into the player's hand. When the deck is empty,
+ * the discard pile (minus its top card) is reshuffled and becomes the new deck.
+ *
+ * @param {object} gs - Game state.
+ * @param {string} userId - The drawing player.
+ * @returns {object|null} The drawn card, or null when there is nothing left to draw.
+ */
 function drawFromDeck(gs, userId) {
   if (gs.drawPile.length === 0) {
     if (gs.discardPile.length <= 1) return null;
@@ -73,8 +84,15 @@ function drawFromDeck(gs, userId) {
   return card;
 }
 
-// True when the player has started something this turn that the rules oblige
-// them to finish before discarding.
+/**
+ * Whether the player has started something this turn that the rules oblige
+ * them to finish before discarding: a card taken from the discard pile or a
+ * swapped joker still in the hand, a drawn cserelap, or szúrás under a handolás bid.
+ *
+ * @param {object} gs - Game state.
+ * @param {string} userId - The player on turn.
+ * @returns {boolean} True when the turn is half-finished.
+ */
 function hasPendingObligation(gs, userId) {
   const hand = gs.hands[userId];
   const inHand = (card) => !!card && hand.some((c) => c.id === card.id);
@@ -84,7 +102,13 @@ function hasPendingObligation(gs, userId) {
     || (gs.goOutFromHandBid[userId] && gs.layOffHistory.length > 0);
 }
 
-// ── Turn timer ────────────────────────────────────────────────────────────────
+/**
+ * Starts the 60-second timer of the current turn and saves the turn's starting
+ * state (for undo and for rolling back a half-finished turn).
+ *
+ * @param {object} io - Socket.IO server.
+ * @param {number} gameId - Game id.
+ */
 function startTurnTimer(io, gameId) {
   clearTurnTimer(gameId);
   const gs = gameStates.get(gameId);
@@ -96,6 +120,14 @@ function startTurnTimer(io, gameId) {
   turnTimers.set(gameId, t);
 }
 
+/**
+ * The turn timer ran out. The third timeout in a row counts as surrender;
+ * otherwise the server draws and discards for the player.
+ *
+ * @param {object} io - Socket.IO server.
+ * @param {number} gameId - Game id.
+ * @returns {Promise<void>}
+ */
 async function handleTimeout(io, gameId) {
   const gs = gameStates.get(gameId);
   if (!gs) return;
@@ -114,7 +146,6 @@ async function handleTimeout(io, gameId) {
   // unfinished handolás) is rolled back to how the turn started.
   if (hasPendingObligation(gs, userId)) restoreTurnSnapshot(gameId, gs);
 
-  // Auto-draw if still in draw phase
   let drawn = null;
   if (gs.phase === 'draw') {
     drawn = drawFromDeck(gs, userId);
@@ -123,7 +154,7 @@ async function handleTimeout(io, gameId) {
     gs.phase = 'discard';
   }
 
-  // Auto-discard: the card drawn just now, otherwise the last card of the hand
+  // Discard the card drawn just now, otherwise the last card of the hand.
   const hand = gs.hands[userId];
   const card = drawn ?? hand[hand.length - 1];
 
@@ -142,7 +173,15 @@ async function handleTimeout(io, gameId) {
   await emitGameState(io, gameId, gs);
 }
 
-// ── Surrender ─────────────────────────────────────────────────────────────────
+/**
+ * Marks a player as surrendered. With one player left, that player wins the game;
+ * otherwise the game goes on, and if it was their turn, the turn passes on.
+ *
+ * @param {object} io - Socket.IO server.
+ * @param {number} gameRoomId - Game id.
+ * @param {number|string} userId - The surrendering player.
+ * @returns {Promise<void>}
+ */
 async function handleSurrender(io, gameRoomId, userId) {
   const gs = gameStates.get(gameRoomId);
   const rd = gameRoundData.get(gameRoomId);
@@ -186,7 +225,16 @@ async function handleSurrender(io, gameRoomId, userId) {
   await emitGameState(io, gameRoomId, gs);
 }
 
-// ── Round / game end ──────────────────────────────────────────────────────────
+/**
+ * A player went out: scores the round, then either ends the game (after round 7,
+ * lowest total wins) or deals the next round after the 6-second round summary.
+ *
+ * @param {object} io - Socket.IO server.
+ * @param {number} gameRoomId - Game id.
+ * @param {object} gs - Game state of the finished round.
+ * @param {string} roundWinnerId - The player who went out.
+ * @returns {Promise<void>}
+ */
 async function handleRoundEnd(io, gameRoomId, gs, roundWinnerId) {
   clearTurnTimer(gameRoomId);
 
@@ -205,13 +253,11 @@ async function handleRoundEnd(io, gameRoomId, gs, roundWinnerId) {
   rd.roundHistory.push({
     round: rd.round, scores: roundScores, winnerId, isGoOutFromHand, isGoOutFromHandWithLayOff,
   });
-  // eslint-disable-next-line no-restricted-syntax
   for (const [pid, pts] of Object.entries(roundScores)) {
     rd.scores[pid] = (rd.scores[pid] || 0) + pts;
   }
 
   if (rd.round >= 7) {
-    // ── Game over ──────────────────────────────────────────────────────────
     // Someone who surrendered during this last round is still in gs.players,
     // but cannot win the game.
     const sortedPlayers = gs.players
@@ -234,7 +280,6 @@ async function handleRoundEnd(io, gameRoomId, gs, roundWinnerId) {
     });
     clearGameMemory(gameRoomId);
   } else {
-    // ── Next round ─────────────────────────────────────────────────────────
     io.to(`game:${gameRoomId}`).emit('game:roundOver', {
       round: rd.round,
       scores: roundScores,
@@ -260,7 +305,13 @@ async function handleRoundEnd(io, gameRoomId, gs, roundWinnerId) {
   }
 }
 
-// ── In-game socket handlers ───────────────────────────────────────────────────
+/**
+ * Registers the in-game events: draw, cserelap exchange, discard, meld, szúrás,
+ * handolás bid, joker swap, undo, surrender, and the dev presets.
+ *
+ * @param {object} io - Socket.IO server.
+ * @param {object} socket - The connected socket.
+ */
 function registerInGameHandlers(io, socket) {
   socket.on('game:draw', async ({ source }, callback) => {
     try {
@@ -313,7 +364,6 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:exchangeSwapCard ──────────────────────────────────────────────────────
   // Only in the first draw round after dealing ("Először az osztást követő
   // húzáskörben cserélheti..."), the player may trade one hand card for the swapCard.
   // The given card becomes the new face-up swapCard; the old swapCard enters the
@@ -370,22 +420,19 @@ function registerInGameHandlers(io, socket) {
       const cardIndex = hand.findIndex((c) => c.id === cardId);
       if (cardIndex === -1) return callback({ error: msg.CARD_NOT_IN_HAND });
 
-      // The card taken from the discard pile cannot be immediately discarded back.
       if (gs.discardDrawnCard?.id === cardId) {
         return callback({ error: msg.DISCARD_TAKEN_CARD });
       }
 
-      // If the discard-drawn card is still in hand, it must be melded first.
       if (gs.discardDrawnCard && hand.some((c) => c.id === gs.discardDrawnCard.id)) {
         return callback({ error: msg.USE_TAKEN_CARD_FIRST });
       }
 
-      // A joker acquired by replacing it in a table meld must be immediately reused.
       if (gs.swappedJoker && hand.some((c) => c.id === gs.swappedJoker.id)) {
         return callback({ error: msg.USE_JOKER_FIRST });
       }
 
-      // Cserelap was drawn: must complete handolás (empty hand), not just discard.
+      // A drawn cserelap may only be used for handolás: this discard must empty the hand.
       if (gs.swapCardDrawn && hand.length > 1) {
         return callback({ error: msg.FINISH_SWAP_CARD_GO_OUT });
       }
@@ -398,17 +445,15 @@ function registerInGameHandlers(io, socket) {
       const [card] = hand.splice(cardIndex, 1);
       gs.discardPile.push(card);
 
-      // Win condition: empty hand ends the round.
       if (gs.hands[userId].length === 0) {
         await handleRoundEnd(io, gameRoomId, gs, userId);
         return callback({ ok: true });
       }
 
-      // Reset consecutive timeout count on successful manual turn completion.
+      // Only timeouts in a row count towards the automatic surrender.
       const rd = gameRoundData.get(gameRoomId);
       if (rd?.consecutiveTimeouts) rd.consecutiveTimeouts[userId] = 0;
 
-      // Advance to the next player (skip surrendered).
       endTurn(gs, userId, rd?.surrenderedPlayers);
 
       startTurnTimer(io, gameRoomId);
@@ -419,9 +464,7 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:meld ──────────────────────────────────────────────────────────────
-  // Lay one or more meld groups from hand onto the table in one atomic action.
-  // Payload: { groups: [[cardId, ...], ...] }
+  // Lays one or more groups at once (all or none). Payload: { groups: [[cardId, ...], ...] }
   socket.on('game:meld', async ({ groups }, callback) => {
     try {
       const { gameRoomId } = socket;
@@ -444,14 +487,12 @@ function registerInGameHandlers(io, socket) {
       const resolvedGroups = [];
       const usedIds = new Set();
 
-      // eslint-disable-next-line no-restricted-syntax
       for (const cardIds of groups) {
         if (!Array.isArray(cardIds) || cardIds.length < 3) {
           return callback({ error: msg.MELD_TOO_SHORT });
         }
 
         const groupCards = [];
-        // eslint-disable-next-line no-restricted-syntax
         for (const cardId of cardIds) {
           if (usedIds.has(cardId)) {
             return callback({ error: msg.CARD_IN_TWO_GROUPS });
@@ -486,10 +527,8 @@ function registerInGameHandlers(io, socket) {
         }
       }
 
-      // Apply: remove used cards from hand, add each group to the table.
       gs.hands[userId] = hand.filter((c) => !usedIds.has(c.id));
 
-      // eslint-disable-next-line no-restricted-syntax
       for (const groupCards of resolvedGroups) {
         const type = isValidSet(groupCards) ? 'set' : 'run';
         gs.melds.push({
@@ -506,7 +545,7 @@ function registerInGameHandlers(io, socket) {
         gs.firstMeldTurnPlayer = userId;
       }
 
-      // Clear obligations for cards no longer in hand.
+      // A card the player had to use is fulfilled once it left the hand.
       if (gs.discardDrawnCard && !gs.hands[userId].some((c) => c.id === gs.discardDrawnCard.id)) {
         gs.discardDrawnCard = null;
       }
@@ -521,9 +560,7 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:layOff ────────────────────────────────────────────────────────────
-  // Add a single card from hand to an existing table meld.
-  // Payload: { meldId, cardId }
+  // Szúrás: one card from the hand onto a table meld. Payload: { meldId, cardId }
   socket.on('game:layOff', async ({ meldId, cardId }, callback) => {
     try {
       const { gameRoomId } = socket;
@@ -585,7 +622,6 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:goOutFromHandBid ──────────────────────────────────────────────────────
   // Toggles the player's handolás finish intention on the first-meld turn.
   // Turning ON:  allows szúrás this turn; operations are logged to layOffHistory.
   // Turning OFF: reverts all szúrás from layOffHistory in reverse order,
@@ -609,7 +645,6 @@ function registerInGameHandlers(io, socket) {
       }
 
       if (gs.goOutFromHandBid[userId]) {
-        // ── Cancel bid: revert all szúrás in reverse order ──────────────────
         const hand = gs.hands[userId];
         for (let i = gs.layOffHistory.length - 1; i >= 0; i -= 1) {
           const { meldId, card } = gs.layOffHistory[i];
@@ -624,7 +659,6 @@ function registerInGameHandlers(io, socket) {
         gs.goOutFromHandBid[userId] = false;
         gs.usedLayOffThisTurn = false;
       } else {
-        // ── Activate bid ─────────────────────────────────────────────────────
         gs.goOutFromHandBid[userId] = true;
       }
 
@@ -635,7 +669,6 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:jokerSwap ─────────────────────────────────────────────────────────
   // Replace a joker in a table meld with a natural card from hand.
   // The joker enters hand and MUST be immediately reused (tracked via swappedJoker).
   // Payload: { meldId, jokerId, naturalCardId }
@@ -689,7 +722,6 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:undoDraw ──────────────────────────────────────────────────────────
   // Undo a draw from the discard pile or from the swapCard (handolás draw).
   // Returns the card and reverts to draw phase — no replacement card is issued.
   socket.on('game:undoDraw', async (_, callback) => {
@@ -721,7 +753,6 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── game:surrender ────────────────────────────────────────────────────────
   socket.on('game:surrender', async (_, callback) => {
     try {
       const { gameRoomId } = socket;
@@ -735,9 +766,8 @@ function registerInGameHandlers(io, socket) {
     }
   });
 
-  // ── dev presets (non-production only) ────────────────────────────────────────
   if (process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line global-require
+    // eslint-disable-next-line global-require -- loaded only outside production
     const DEV_PRESETS = require('./devPresets');
     socket.on('game:devPreset', ({ preset }, callback) => {
       const gs = gameStates.get(socket.gameRoomId);

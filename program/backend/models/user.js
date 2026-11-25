@@ -1,7 +1,6 @@
 const {
   Model,
 } = require('sequelize');
-// eslint-disable-next-line import/no-extraneous-dependencies
 const bcrypt = require('bcrypt');
 
 module.exports = (sequelize, DataTypes) => {
@@ -15,10 +14,19 @@ module.exports = (sequelize, DataTypes) => {
       User.hasMany(models.Game, { foreignKey: 'winnerID', as: 'GamesWon' });
     }
 
+    /**
+     * @param {string} password - Plain-text password to check.
+     * @returns {boolean} True when it matches the stored hash.
+     */
     comparePassword(password) {
       return bcrypt.compareSync(password, this.password);
     }
 
+    /**
+     * Leaves the password hash out whenever a user is sent or put in a token.
+     *
+     * @returns {object} The user's fields without `password`.
+     */
     toJSON() {
       const data = this.get();
       if (Object.prototype.hasOwnProperty.call(data, 'password')) {
@@ -67,24 +75,23 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'User',
+    /* eslint-disable no-param-reassign -- a hook changes the instance before it is saved */
     hooks: {
       beforeCreate: (user) => {
-        // eslint-disable-next-line no-param-reassign
         user.password = bcrypt.hashSync(user.password, 12);
       },
       beforeBulkCreate: (users) => {
         users.forEach((user) => {
-          // eslint-disable-next-line no-param-reassign
           user.password = bcrypt.hashSync(user.password, 12);
         });
       },
       beforeUpdate: (user) => {
         if (user.changed('password')) {
-          // eslint-disable-next-line no-param-reassign
           user.password = bcrypt.hashSync(user.password, 12);
         }
       },
     },
+    /* eslint-enable no-param-reassign */
   });
   return User;
 };

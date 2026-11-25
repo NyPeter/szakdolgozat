@@ -8,8 +8,6 @@ const {
   canSwapJokerInMeld, calculateRoundScores,
 } = engine;
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 let nextId = 1000;
 const VALUES = {
   Jack: 10, Queen: 10, King: 10, Ace: 11, Joker: 15,
@@ -28,8 +26,6 @@ const run = (suit, ...ranks) => ranks.map((r) => card(r, suit));
 
 const ranksOf = (cards) => cards.map((c) => c.rank);
 const isJoker = (c) => c.rank === 'Joker';
-
-// ── Deck ─────────────────────────────────────────────────────────────────────
 
 describe('createDeck', () => {
   test('2-4 players: 2 packs (104 cards) and 6 jokers', () => {
@@ -89,8 +85,6 @@ describe('shuffle', () => {
     expect(shuffle([...deck]).map((c) => c.id).join()).not.toBe(before);
   });
 });
-
-// ── Dealing and the swap card (cserelap) ─────────────────────────────────────
 
 describe('drawSwapCard', () => {
   afterEach(() => jest.restoreAllMocks());
@@ -186,8 +180,6 @@ describe('initGameState', () => {
   });
 });
 
-// ── What a player may see ────────────────────────────────────────────────────
-
 describe('getPlayerView', () => {
   const makeState = () => {
     const gs = initGameState([1, 2], 1);
@@ -222,8 +214,6 @@ describe('getPlayerView', () => {
     expect(getPlayerView(gs, 2).drawnCardId).toBeNull();
   });
 });
-
-// ── Melds ────────────────────────────────────────────────────────────────────
 
 describe('isValidSet (csoport)', () => {
   test('3 or 4 cards of the same rank in different suits', () => {
@@ -310,8 +300,6 @@ describe('isValidMeld', () => {
   });
 });
 
-// ── Display order on the table ───────────────────────────────────────────────
-
 describe('sortMeldCards', () => {
   test('set: ordered by suit, joker last', () => {
     const sorted = sortMeldCards([card('Joker'), card('8', 'spades'), card('8', 'clubs'), card('8', 'hearts')], 'set');
@@ -334,8 +322,6 @@ describe('sortMeldCards', () => {
     expect(ranksOf(sortMeldCards(run('hearts', ...selected), 'run'))).toEqual(shown);
   });
 });
-
-// ── 51-point first-meld minimum ──────────────────────────────────────────────
 
 describe('meldValueForMinimum', () => {
   test('without a joker: the sum of the card values', () => {
@@ -360,8 +346,6 @@ describe('meldValueForMinimum', () => {
     expect(meldValueForMinimum(run('hearts', 'Ace', '2', 'Joker'))).toBe(16); // only 3 fits
   });
 });
-
-// ── Taking a joker from the table ────────────────────────────────────────────
 
 describe('canSwapJokerInMeld', () => {
   test('run: "kőr 7, kőr 8, dzsóker (kőr 9), kőr 10: a kőr 9 lerakásával szerezhető meg"', () => {
@@ -393,8 +377,6 @@ describe('canSwapJokerInMeld', () => {
     expect(canSwapJokerInMeld(meld, card('9', 'hearts'), cards[0].id)).toBe(false);
   });
 });
-
-// ── Scoring at the end of a round ────────────────────────────────────────────
 
 describe('calculateRoundScores', () => {
   // Player 1 wins; 2 has melded and holds 7 + King + joker (32);

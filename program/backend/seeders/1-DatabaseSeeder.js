@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 const { faker } = require('@faker-js/faker');
 const {
   User, Game, Chat, GameUser,
@@ -11,11 +10,9 @@ module.exports = {
     const chats = [];
     const gameUsers = [];
 
-    // Track users in not-finished games
+    // A user may be in only one waiting or started game.
     const usersInUnfinishedGames = new Set();
 
-    // Step 1: Create Users
-    // 1 Admin User
     users.push({
       name: 'Admin User',
       email: 'admin@example.com',
@@ -26,7 +23,6 @@ module.exports = {
       mutedUntil: null,
     });
 
-    // 30 Regular Users
     for (let i = 0; i < 30; i++) {
       users.push({
         name: faker.person.fullName(),
@@ -41,14 +37,12 @@ module.exports = {
 
     const insertedUsers = await User.bulkCreate(users, { returning: true });
 
-    // Step 2: Create Games
     const statuses = [
-      ...Array(3).fill('waiting'), // 3 waiting games
-      ...Array(2).fill('started'), // 2 started games
-      ...Array(10).fill('finished'), // 10 finished games
+      ...Array(3).fill('waiting'),
+      ...Array(2).fill('started'),
+      ...Array(10).fill('finished'),
     ];
 
-    // eslint-disable-next-line no-restricted-syntax
     for (const status of statuses) {
       const owner = faker.helpers.arrayElement(insertedUsers);
       if (status !== 'finished') {
@@ -63,13 +57,10 @@ module.exports = {
 
     const insertedGames = await Game.bulkCreate(games, { returning: true });
 
-    // Step 3: Associate Users with Games
-    const gameParticipantsMap = {}; // To track participants per game for chat messages
-    // eslint-disable-next-line no-restricted-syntax
+    const gameParticipantsMap = {};
     for (const game of insertedGames) {
       const isUnfinished = game.status !== 'finished';
 
-      // Determine available users
       const availableUsers = isUnfinished
         ? insertedUsers.filter((user) => !usersInUnfinishedGames.has(user.id))
         : insertedUsers;
@@ -78,7 +69,7 @@ module.exports = {
       const participants = faker.helpers.arrayElements(availableUsers, participantCount);
       participants.unshift(insertedUsers.find((u) => u.id === game.ownerID));
 
-      gameParticipantsMap[game.id] = participants; // Store participants for this game
+      gameParticipantsMap[game.id] = participants;
 
       participants.forEach((user) => {
         gameUsers.push({
@@ -92,30 +83,26 @@ module.exports = {
         }
       });
 
-      // Ensure the winnerID is among the participants for finished games
+      // The winner picked above was any user; it must be one of the players.
       if (game.status === 'finished' && game.winnerID) {
         const validWinner = faker.helpers.arrayElement(participants);
         game.winnerID = validWinner.id;
       }
     }
 
-    // Update games with final winnerIDs
     await Promise.all(insertedGames.map((game) => game.save()));
 
-    // Step 4: Create Chats (20 messages per game)
-    // eslint-disable-next-line no-restricted-syntax
     for (const game of insertedGames) {
-      const participants = gameParticipantsMap[game.id]; // Get participants for this game
+      const participants = gameParticipantsMap[game.id];
       for (let i = 0; i < 20; i++) {
         chats.push({
           message: faker.lorem.sentence(),
-          userID: faker.helpers.arrayElement(participants).id, // Random participant sends message
+          userID: faker.helpers.arrayElement(participants).id,
           gameID: game.id,
         });
       }
     }
 
-    // Insert GameUser Relationships and Chats
     await GameUser.bulkCreate(gameUsers);
     await Chat.bulkCreate(chats);
   },

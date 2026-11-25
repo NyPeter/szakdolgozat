@@ -11,9 +11,14 @@ const { loadCurrentUser } = require('./utils/currentUser');
 
 const secret = process.env.JWT_SECRET || 'secret';
 
-// Builds the Fastify app with every plugin and route, without listening.
-// server.js starts it; the integration tests start their own copy.
-// eslint-disable-next-line jsdoc/require-jsdoc
+/**
+ * Builds the Fastify app with every plugin and route, without listening.
+ * server.js starts it; the integration tests start their own copy.
+ *
+ * @param {object} [options] - App options.
+ * @param {object|boolean} [options.logger] - Fastify logger setting (false in the tests).
+ * @returns {object} The Fastify instance.
+ */
 function buildApp({ logger = { level: 'info', file: 'fastify.log' } } = {}) {
   const fastify = Fastify({ logger });
 

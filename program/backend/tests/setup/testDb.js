@@ -11,7 +11,9 @@ if (path.basename(storage) !== 'test_database.sqlite') {
   throw new Error(`Refusing to use ${storage} as the test database`);
 }
 
-// eslint-disable-next-line jsdoc/require-jsdoc
+/**
+ * Deletes the test database with its SQLite side files.
+ */
 function removeTestDb() {
   ['', '-shm', '-wal', '-journal'].forEach((suffix) => {
     fs.rmSync(storage + suffix, { force: true });

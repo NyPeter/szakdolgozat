@@ -4,14 +4,12 @@
 // (lerakás, szúrás, handolás, cserelap, dzsóker).
 
 const messages = {
-  // ── General ─────────────────────────────────────────────────────────────
   SERVER_ERROR: 'Szerverhiba történt, próbáld újra.',
   INVALID_REQUEST: 'Érvénytelen kérés.',
   NOT_FOUND: 'A kért oldal nem található.',
   UNAUTHORIZED: 'Be kell jelentkezned.',
   FORBIDDEN: 'Ehhez nincs jogosultságod.',
 
-  // ── Account ─────────────────────────────────────────────────────────────
   LOGIN_FIELDS_REQUIRED: 'Add meg az email címet és a jelszót.',
   REGISTER_FIELDS_REQUIRED: 'Add meg a nevet, az email címet és a jelszót.',
   EMAIL_NOT_FOUND: 'Ezzel az email címmel nincs regisztrált felhasználó.',
@@ -34,7 +32,6 @@ const messages = {
   UPLOAD_FAILED: 'A kép feltöltése nem sikerült.',
   CANNOT_MODIFY_ADMIN: 'Adminisztrátort nem lehet felfüggeszteni vagy elnémítani.',
 
-  // ── Rooms ───────────────────────────────────────────────────────────────
   ACTIVE_GAME: 'Folyamatban lévő játékod van. Előbb fejezd be vagy add fel.',
   NOT_IN_ROOM: 'Nem vagy szobában.',
   ROOM_NOT_FOUND: 'A szoba nem található.',
@@ -49,11 +46,9 @@ const messages = {
   CANNOT_KICK_SELF: 'Saját magadat nem távolíthatod el.',
   NOT_ENOUGH_PLAYERS: 'A játékhoz legalább 2 játékos kell.',
 
-  // ── Chat ────────────────────────────────────────────────────────────────
   INVALID_CHAT_MESSAGE: 'Az üzenet nem lehet üres vagy 500 karakternél hosszabb.',
   MUTED: 'Le vagy némítva.',
 
-  // ── Game ────────────────────────────────────────────────────────────────
   GAME_NOT_STARTED: 'A játék még nem indult el.',
   NOT_YOUR_TURN: 'Nem te következel.',
   ALREADY_DRAWN: 'Ebben a körben már húztál.',

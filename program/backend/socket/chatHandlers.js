@@ -1,10 +1,15 @@
-/* eslint-disable jsdoc/require-jsdoc */
 const db = require('../models');
 
 const { User, Chat } = db;
 const msg = require('../utils/messages');
 const { serverError } = require('../utils/serverError');
 
+/**
+ * Registers `chat:send`: stores the message and sends it to everyone in the room.
+ *
+ * @param {object} io - Socket.IO server.
+ * @param {object} socket - The connected socket.
+ */
 function registerChatHandlers(io, socket) {
   socket.on('chat:send', async ({ message }, callback) => {
     try {

@@ -13,8 +13,6 @@ let userCount = 0;
 beforeAll(async () => { server = await startServer(); });
 afterAll(() => server.close());
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 let nextCardId = 5000; // the decks use ids 0-164
 const VALUES = {
   Jack: 10, Queen: 10, King: 10, Ace: 11, Joker: 15,
@@ -24,7 +22,6 @@ const card = (rank, suit = 'hearts') => ({
 });
 const ids = (cards) => cards.map((c) => c.id);
 
-// The last game:state a socket received.
 const lastState = (socket) => socket.received.filter((e) => e.event === 'game:state').at(-1).data;
 
 // Starts a game with n new players. Returns the players in turn order
@@ -47,7 +44,6 @@ const startGame = async (n) => {
   return { gameId, players, gs };
 };
 
-// Gives a player exactly these cards.
 const setHand = (game, player, cards) => {
   const state = game.gs();
   state.hands[String(player.id)] = cards;
@@ -58,8 +54,6 @@ const passFirstTurn = async ({ players, gs }) => {
   const first = gs().hands[String(players[0].id)][0];
   await emit(players[0].socket, 'game:discard', { cardId: first.id });
 };
-
-// ── Turns ────────────────────────────────────────────────────────────────────
 
 describe('turn order', () => {
   test('the starting player (15 cards) discards first, without drawing', async () => {
@@ -162,8 +156,6 @@ describe('drawing', () => {
     expect(await emit(second.socket, 'game:undoDraw')).toEqual({ error: msg.NOTHING_TO_UNDO });
   });
 });
-
-// ── Melds ────────────────────────────────────────────────────────────────────
 
 describe('laying down melds', () => {
   test('the first meld must be worth at least 51 points', async () => {
@@ -274,8 +266,6 @@ describe('lay-off (szúrás) and joker swap', () => {
   });
 });
 
-// ── Round end ────────────────────────────────────────────────────────────────
-
 describe('end of a round', () => {
   test('normal win: winner -20, a player who melded writes the hand value, one who did not +100', async () => {
     const game = await startGame(3);
@@ -318,8 +308,6 @@ describe('end of a round', () => {
   }, 15000);
 });
 
-// ── Surrender ────────────────────────────────────────────────────────────────
-
 describe('surrender', () => {
   test('with three players the game goes on without the one who gave up', async () => {
     const game = await startGame(3);
@@ -350,8 +338,6 @@ describe('surrender', () => {
     expect(await del()).toEqual({ status: 409, body: { message: msg.ACTIVE_GAME } });
   });
 });
-
-// ── Chat ─────────────────────────────────────────────────────────────────────
 
 describe('chat', () => {
   test('a message reaches everyone in the room and is stored', async () => {

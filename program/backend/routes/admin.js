@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 const { Op } = require('sequelize');
 const db = require('../models');
 const msg = require('../utils/messages');
@@ -41,6 +40,15 @@ module.exports = async (fastify) => {
     });
   });
 
+  /**
+   * Sets a suspension or mute end date from `days` in the body:
+   * -1 = indefinitely, a positive number = that many days from now, 0 = lift it.
+   *
+   * @param {object} request - Fastify request (`params.id`, `body.days`).
+   * @param {object} reply - Fastify reply.
+   * @param {string} field - 'suspendedUntil' or 'mutedUntil'.
+   * @returns {Promise<object>} The sent reply.
+   */
   async function applyDateField(request, reply, field) {
     const targetId = parseInt(request.params.id, 10);
     const { days } = request.body;

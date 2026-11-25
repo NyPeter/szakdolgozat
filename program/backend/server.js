@@ -1,6 +1,5 @@
 require('dotenv').config();
-// eslint-disable-next-line import/extensions
-const { initSocket } = require('./socket/index.js');
+const { initSocket } = require('./socket');
 const { buildApp } = require('./app');
 const db = require('./models');
 
@@ -18,7 +17,6 @@ db.sequelize.query('PRAGMA journal_mode = WAL;')
     fastify.listen({ port }, (err, address) => {
       if (err) throw err;
 
-      // eslint-disable-next-line no-console
       console.log(`Server listening on ${address}`);
 
       initSocket(fastify.io);

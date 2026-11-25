@@ -92,19 +92,17 @@ module.exports = async (fastify) => {
         // A game must have an owner: hand it to another participant
         // (preferably one who is still playing), or remove it if there is none.
         const owned = await Game.findAll({ where: { ownerID: id }, transaction });
-        // eslint-disable-next-line no-restricted-syntax
+        /* eslint-disable no-await-in-loop -- a transaction runs its queries one at a time anyway */
         for (const game of owned) {
-          // eslint-disable-next-line no-await-in-loop
           const heir = await GameUser.findOne({
             where: { gameID: game.id, userID: { [Op.ne]: id } },
             order: [['isSurrendered', 'ASC'], ['createdAt', 'ASC']],
             transaction,
           });
-          // eslint-disable-next-line no-await-in-loop
           if (heir) await game.update({ ownerID: heir.userID }, { transaction });
-          // eslint-disable-next-line no-await-in-loop
           else await game.destroy({ transaction });
         }
+        /* eslint-enable no-await-in-loop */
 
         await GameUser.destroy({ where: { userID: id }, transaction });
         await user.destroy({ transaction });
@@ -163,7 +161,6 @@ module.exports = async (fastify) => {
         throw err;
       }
 
-      // Only allow images
       const allowed = ['image/png', 'image/jpeg', 'image/jpg'];
       if (!allowed.includes(data.mimetype)) {
         return reply.status(400).send({ message: msg.INVALID_FILE_TYPE });
@@ -175,17 +172,15 @@ module.exports = async (fastify) => {
       const fileName = `avatar_${request.user.id}.${ext}`;
       const filePath = `uploads/${fileName}`;
 
-      // Remove old avatar if exists
+      // The old avatar may have the other extension, so it is not overwritten.
       const files = await fs.promises.readdir('uploads');
       const oldAvatar = files.find((f) => f.startsWith(`avatar_${request.user.id}.`));
       if (oldAvatar) {
         await fs.promises.unlink(`uploads/${oldAvatar}`);
       }
 
-      // Save the new avatar
       await fs.promises.writeFile(filePath, fileBuffer);
 
-      // Save URL to user
       const user = await User.findByPk(request.user.id);
       await user.update({
         avatarURL: `/${filePath}`,

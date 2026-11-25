@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 // Shared helpers for the integration tests: a real server on a random port,
 // the test database, HTTP requests and Socket.IO clients.
 const path = require('path');
@@ -15,7 +14,11 @@ if (path.resolve(db.sequelize.options.storage) !== storage) {
 
 const PASSWORD = 'password1';
 
-// Empties every table, so each test file starts from a clean database.
+/**
+ * Empties every table, so each test file starts from a clean database.
+ *
+ * @returns {Promise<void>}
+ */
 async function resetDb() {
   await db.Chat.destroy({ where: {} });
   await db.GameUser.destroy({ where: {} });
@@ -23,7 +26,11 @@ async function resetDb() {
   await db.User.destroy({ where: {} });
 }
 
-// Starts the app like server.js does, on a free port.
+/**
+ * Starts the app like server.js does, on a free port.
+ *
+ * @returns {Promise<object>} `{ app, url, request, register, connect, close }`.
+ */
 async function startServer() {
   // The socket layer logs every connection; keep the test output readable.
   jest.spyOn(console, 'log').mockImplementation(() => {});
@@ -79,7 +86,6 @@ async function startServer() {
     store.leaveTimers.forEach((t) => clearTimeout(t));
     store.leaveTimers.clear();
     await db.sequelize.close();
-    // eslint-disable-next-line no-console
     console.log.mockRestore();
   };
 
@@ -88,14 +94,28 @@ async function startServer() {
   };
 }
 
-// Sends an event and resolves with the server's callback answer.
+/**
+ * Sends an event and resolves with the server's callback answer.
+ *
+ * @param {object} socket - Socket.IO client.
+ * @param {string} event - Event name.
+ * @param {object} [data] - Payload.
+ * @returns {Promise<object>} The callback answer.
+ */
 function emit(socket, event, data = {}) {
   return new Promise((resolve, reject) => {
     socket.timeout(5000).emit(event, data, (err, res) => (err ? reject(err) : resolve(res)));
   });
 }
 
-// Resolves with the next `event` the socket receives.
+/**
+ * Resolves with the next `event` the socket receives.
+ *
+ * @param {object} socket - Socket.IO client.
+ * @param {string} event - Event name.
+ * @param {number} [timeout] - Milliseconds before it fails.
+ * @returns {Promise<object>} The event's data.
+ */
 function waitFor(socket, event, timeout = 5000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`no ${event} within ${timeout} ms`)), timeout);
