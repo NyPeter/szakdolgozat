@@ -1,15 +1,3 @@
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: url('/pexels-didsss-2508565.jpg') no-repeat center center fixed;
-  background-size: cover;
-}
-
-@font-face {
-  font-family: 'Rooster';
-  src: url('/ROOSTER PERSONAL USE.ttf') format('truetype');
-}
-
 .leaderboard-back-btn {
   position: absolute;
   top: 20px;
