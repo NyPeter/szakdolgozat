@@ -9,6 +9,12 @@ import './Games.css';
 
 const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+/**
+ * The list of waiting rooms (and the user's running game), with joining and
+ * creating a room.
+ *
+ * @returns {object} The page.
+ */
 export const Games = () => {
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState([]);

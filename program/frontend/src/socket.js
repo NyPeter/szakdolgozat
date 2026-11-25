@@ -2,6 +2,9 @@ import { io } from 'socket.io-client';
 
 let socket = null;
 
+/**
+ * Opens the shared Socket.IO connection with the saved token (if logged in).
+ */
 export function connectSocket() {
   const token = localStorage.getItem('accessToken');
   if (!token) return;
@@ -16,6 +19,9 @@ export function connectSocket() {
   if (import.meta.env.DEV) window._socket = socket;
 }
 
+/**
+ * Closes the shared connection (logout, account deletion).
+ */
 export function disconnectSocket() {
   if (socket) {
     socket.disconnect();
@@ -23,6 +29,9 @@ export function disconnectSocket() {
   }
 }
 
+/**
+ * @returns {object|null} The shared connection, or null when not logged in.
+ */
 export function getSocket() {
   return socket;
 }

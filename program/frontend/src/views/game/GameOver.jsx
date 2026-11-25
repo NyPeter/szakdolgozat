@@ -1,5 +1,14 @@
 import { Badge, Button } from 'react-bootstrap';
 
+/**
+ * The final results, lowest score first.
+ *
+ * @param {object} props - Component props.
+ * @param {object} props.data - The `game:over` event.
+ * @param {object} props.playerNames - Names by player id.
+ * @param {Function} props.onClose - Back to the main menu.
+ * @returns {object} The overlay.
+ */
 export function GameOver({ data, playerNames, onClose }) {
   const sorted = Object.entries(data.scores).sort((a, b) => a[1] - b[1]);
   const surrendered = data.surrenderedPlayers ?? [];

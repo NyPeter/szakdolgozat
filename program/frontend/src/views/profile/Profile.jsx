@@ -7,11 +7,17 @@ import './Profile.css';
 
 const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+/**
+ * Profile page: avatar upload, name and email, password change, account deletion.
+ *
+ * @returns {object} The page.
+ */
 export const Profile = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Used only for cache-busting avatar URL
+  // Added to the avatar URL: the file name stays the same after an upload, so
+  // without it the browser would show its cached copy.
   const [avatarVersion, setAvatarVersion] = useState(Date.now());
 
   const [editData, setEditData] = useState({
@@ -26,7 +32,7 @@ export const Profile = () => {
   const [deletePassword, setDeletePassword] = useState('');
 
   const [avatarError, setAvatarError] = useState('');
-  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_SIZE = 5 * 1024 * 1024;
 
   // Result of the last action, shown under the section it belongs to:
   // { section: 'avatar' | 'profile' | 'password' | 'delete', variant: 'success' | 'danger', text }
@@ -57,7 +63,6 @@ export const Profile = () => {
         newPassword: '',
       });
 
-      // force fresh avatar load
       setAvatarVersion(Date.now());
     } catch (err) {
       console.error('Load user error:', err);
@@ -131,7 +136,6 @@ export const Profile = () => {
       return;
     }
 
-    // Valid file
     setAvatarFile(file);
     setAvatarError('');
   };
@@ -155,7 +159,7 @@ export const Profile = () => {
       });
 
       setUser((prev) => ({ ...prev, avatarURL: data.avatarURL }));
-      setAvatarVersion(Date.now()); // <-- force fresh image URL
+      setAvatarVersion(Date.now());
 
       setNotice({ section: 'avatar', variant: 'success', text: 'Az avatar frissült.' });
     } catch (err) {

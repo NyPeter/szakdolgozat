@@ -12,11 +12,16 @@ import './Game.css';
 
 const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+/**
+ * The room page: the waiting room (players, settings, chat), then the game
+ * board, the round summaries and the final results. Holds the socket listeners.
+ *
+ * @returns {object} The page.
+ */
 export const Game = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const gameId = Number(id);
-  // The logged-in user's id, from GET /user like the other pages.
   const [userId, setUserId] = useState(null);
 
   const joinedGameIdRef = useRef(null);
@@ -58,7 +63,6 @@ export const Game = () => {
       .catch(() => navigate('/Login'));
   }, [navigate]);
 
-  // Warn before tab close during active game
   useEffect(() => {
     if (!isWaiting && gameState && !gameOverData) {
       const handler = (e) => {
@@ -137,6 +141,7 @@ export const Game = () => {
       });
     };
 
+    // StrictMode runs this effect twice in development; join only once per room.
     if (joinedGameIdRef.current !== gameId) {
       joinedGameIdRef.current = gameId;
       join();
@@ -322,7 +327,6 @@ export const Game = () => {
 
   return (
     <Container fluid className="game-room-container">
-      {/* ── Surrender confirmation modal ──────────────────────────────── */}
       <Modal show={showSurrender} onHide={() => setShowSurrender(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Feladás</Modal.Title>
@@ -371,7 +375,6 @@ export const Game = () => {
         <div className="game-room-btn" />
       </div>
 
-      {/* Meta line — only shown in waiting room */}
       {isWaiting && (
         <p className="game-room-meta">
           Tulajdonos: <strong>{room.owner?.name}</strong>
@@ -383,7 +386,6 @@ export const Game = () => {
 
       {isWaiting ? (
         <div className="game-room-body">
-          {/* Left: player list with kick buttons for owner */}
           <div className="game-room-left">
             <ListGroup className="game-room-player-list">
               {room.players.map((p) => (

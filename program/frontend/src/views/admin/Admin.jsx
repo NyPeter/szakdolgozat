@@ -5,6 +5,10 @@ import {
 import axios from 'axios';
 import { useNavigate } from 'react-router';
 
+/**
+ * @param {string|null} iso - End of a suspension or mute.
+ * @returns {string} The date, or '–' when there is none or it has passed.
+ */
 function formatDate(iso) {
   if (!iso) return '–';
   const d = new Date(iso);
@@ -12,6 +16,17 @@ function formatDate(iso) {
   return d.toLocaleDateString('hu-HU');
 }
 
+/**
+ * Days input and buttons that set a user's suspension or mute.
+ *
+ * @param {object} props - Component props.
+ * @param {number} props.userId - The user.
+ * @param {string} props.field - 'suspend' or 'mute' (the route name).
+ * @param {string|null} props.currentValue - The current end date.
+ * @param {Function} props.onDone - Reloads the list after a change.
+ * @param {Function} props.onError - Shows an error message.
+ * @returns {object} The controls.
+ */
 function ActionCell({
   userId, field, currentValue, onDone, onError,
 }) {
@@ -81,6 +96,11 @@ function ActionCell({
   );
 }
 
+/**
+ * Admin page: the user list with name search, suspending and muting.
+ *
+ * @returns {object} The page.
+ */
 export const Admin = () => {
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);

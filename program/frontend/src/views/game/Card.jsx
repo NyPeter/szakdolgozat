@@ -5,9 +5,13 @@ const RANK_TO_FILENAME = {
   Ace: 'ace', Jack: 'jack', Queen: 'queen', King: 'king',
 };
 
-// Builds the public-directory path for a card image.
-// Jokers alternate between the red and black variant using the card's unique id
-// so the two visually differ within the same hand.
+/**
+ * Path of a card image in public/. Jokers are red or black by their id, so two
+ * jokers in the same hand look different.
+ *
+ * @param {object} card - `{ id, suit, rank }`.
+ * @returns {string} The image URL.
+ */
 function cardSrc(card) {
   if (card.rank === 'Joker') {
     return card.id % 2 === 0
@@ -18,23 +22,31 @@ function cardSrc(card) {
   return `/SVG-cards-1.3/${rank}_of_${card.suit}.svg`;
 }
 
+/**
+ * @param {object} card - The card.
+ * @param {boolean} faceDown - Whether the back is shown.
+ * @returns {string} The image's alt text.
+ */
 function cardAlt(card, faceDown) {
   if (faceDown) return 'Kártya háta';
   if (card.rank === 'Joker') return 'Joker';
   return `${card.rank} ${card.suit}`;
 }
 
-// A single playing card.
-//
-// Props:
-//   card      – { id, suit, rank, value } from the game state
-//   faceDown  – show the card back (used for opponent hands and the draw pile)
-//   selected  – blue tint + lift, used for meld selection in Step 3
-//   mustUse   – gold border glow, marks the discard-pile card the player
-//               must use in a meld before they are allowed to discard
-//   isNew     – green outline and "Új" label, marks the card drawn this turn
-//   onClick   – enables pointer cursor and hover lift animation
-//   style     – forwarded to the outer wrapper (use for width/height overrides)
+/**
+ * A single playing card.
+ *
+ * @param {object} props - Component props.
+ * @param {object} props.card - `{ id, suit, rank, value }` from the game state.
+ * @param {boolean} [props.faceDown] - Show the back (opponents' hands, the deck).
+ * @param {boolean} [props.selected] - Blue tint and lift: selected for a meld.
+ * @param {boolean} [props.mustUse] - Gold glow: the card taken from the discard
+ *   pile, which must be used before discarding.
+ * @param {boolean} [props.isNew] - Green outline and "Új": drawn this turn.
+ * @param {Function} [props.onClick] - Makes the card clickable.
+ * @param {object} [props.style] - Extra style for the wrapper (width/height).
+ * @returns {object|null} The card.
+ */
 export function Card({
   card, faceDown = false, selected = false, mustUse = false, isNew = false, onClick, style,
 }) {
@@ -50,8 +62,7 @@ export function Card({
   ].filter(Boolean).join(' ');
 
   return (
-    // The wrapper div owns all sizing, cursor, and filter effects.
-    // Default size matches a standard poker card (63×88). Override via style.
+    // Default size: a standard poker card (63×88).
     <div className={cls} onClick={onClick} style={{ width: 63, height: 88, ...style }}>
       <img src={src} alt={altText} className="card-img" draggable={false} />
       {/* Tint overlays sit above the image and are invisible to pointer events */}

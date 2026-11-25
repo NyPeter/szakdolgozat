@@ -7,10 +7,13 @@ import './GameBoard.css';
 
 const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-// ── Hand sorting ────────────────────────────────────────────────────────────
 const RANK_ORDER = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace', 'Joker'];
 const SUIT_ORDER = ['clubs', 'diamonds', 'hearts', 'spades'];
 
+/**
+ * @param {Array<object>} cards - The hand.
+ * @returns {Array<object>} A copy ordered by suit, then rank; jokers last.
+ */
 function sortBySuit(cards) {
   return [...cards].sort((a, b) => {
     const sa = a.suit === null ? SUIT_ORDER.length : SUIT_ORDER.indexOf(a.suit);
@@ -20,6 +23,10 @@ function sortBySuit(cards) {
   });
 }
 
+/**
+ * @param {Array<object>} cards - The hand.
+ * @returns {Array<object>} A copy ordered by rank, then suit; jokers last.
+ */
 function sortByRank(cards) {
   return [...cards].sort((a, b) => {
     const ra = RANK_ORDER.indexOf(a.rank);
@@ -33,7 +40,9 @@ function sortByRank(cards) {
 
 const TURN_SECONDS = 60;
 
-// Preload all card images on first mount to avoid slow first-load in a game.
+/**
+ * Loads every card image once, so cards do not appear one by one during the game.
+ */
 function useCardPreload() {
   useEffect(() => {
     const suits = ['clubs', 'diamonds', 'hearts', 'spades'];
@@ -46,6 +55,17 @@ function useCardPreload() {
   }, []);
 }
 
+/**
+ * The game table: scores and countdown, opponents, piles, melds, the player's
+ * hand and the action buttons. Every action is sent to the server, and the
+ * table is redrawn from the `game:state` it sends back.
+ *
+ * @param {object} props - Component props.
+ * @param {object} props.room - The room (`game:joined` / `game:update`).
+ * @param {object} props.gameState - This player's view of the game.
+ * @param {number} props.userId - The logged-in user's id.
+ * @returns {object} The table.
+ */
 export function GameBoard({ room, gameState: gs, userId }) {
   useCardPreload();
 
@@ -57,8 +77,7 @@ export function GameBoard({ room, gameState: gs, userId }) {
   const [jokerSwapTarget, setJokerSwapTarget] = useState(null);
   const [timeLeft, setTimeLeft] = useState(TURN_SECONDS);
 
-  // Countdown timer — only relevant when it's this player's turn.
-  // Re-runs whenever the server issues a new timer timestamp (turn boundary).
+  // Counted from the server's turn start time, so every player sees the same countdown.
   useEffect(() => {
     if (!gs.turnTimerStartedAt) return undefined;
     const update = () => {
@@ -70,7 +89,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
     return () => clearInterval(id);
   }, [gs.turnTimerStartedAt]);
 
-  // ── Derived values ─────────────────────────────────────────────────────
   const myId = String(userId);
   const currentPlayerId = String(gs.players[gs.turnIndex]);
   const isMyTurn = currentPlayerId === myId;
@@ -97,7 +115,13 @@ export function GameBoard({ room, gameState: gs, userId }) {
   const sortedHand = (sortMode === 'suit' ? sortBySuit(myHand) : sortByRank(myHand))
     .filter((c) => !stagedCardIds.has(c.id));
 
-  // ── Socket emit helper ─────────────────────────────────────────────────
+  /**
+   * Sends an action; a refused one shows the server's message.
+   *
+   * @param {string} event - Event name.
+   * @param {object} data - Payload.
+   * @param {Function} [onOk] - Runs when the server accepted it.
+   */
   function emit(event, data, onOk) {
     const socket = getSocket();
     if (!socket) return;
@@ -117,8 +141,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
     setJokerSwapTarget(null);
     setPendingGroups([]);
   }
-
-  // ── Action handlers ────────────────────────────────────────────────────
 
   function handleDrawDeck() {
     if (!isMyTurn || gs.phase !== 'draw') return;
@@ -220,7 +242,9 @@ export function GameBoard({ room, gameState: gs, userId }) {
     emit('game:goOutFromHandBid', {});
   }
 
-  // ── Status message ─────────────────────────────────────────────────────
+  /**
+   * @returns {string} What the player should do now, for the status bar.
+   */
   function statusText() {
     if (!isMyTurn) return `${playerNames[currentPlayerId] ?? '?'} lép...`;
     if (gs.phase === 'draw') {
@@ -238,11 +262,9 @@ export function GameBoard({ room, gameState: gs, userId }) {
     return 'Rakj le kombinációkat, szúrj, vagy dobj el egy lapot';
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="game-board">
 
-      {/* ── Top bar: round + countdown + scores ───────────────────────── */}
       <div className="gb-top-bar">
         <div className="gb-round">
           <Badge bg="secondary">{gs.round}. kör / 7</Badge>
@@ -266,7 +288,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
         )}
       </div>
 
-      {/* ── Opponents strip ─────────────────────────────────────────────── */}
       <div className="gb-opponents">
         {opponents.map((id) => {
           const strId = String(id);
@@ -326,7 +347,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
         })}
       </div>
 
-      {/* ── Piles (cserelap / talon / discard) ──────────────────────────── */}
       <div className="gb-piles">
 
         <div className="gb-pile">
@@ -369,7 +389,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
         </div>
       </div>
 
-      {/* ── Melds zone (horizontally scrollable) ────────────────────────── */}
       <div className="gb-melds">
         {gs.melds.length === 0 && (
           <span className="gb-melds-empty">Lerakott kombinációk</span>
@@ -411,7 +430,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
         })}
       </div>
 
-      {/* ── Action buttons (above hand) ─────────────────────────────────── */}
       {isMyTurn && gs.phase === 'discard' && (
         <div className="gb-actions">
 
@@ -437,6 +455,7 @@ export function GameBoard({ room, gameState: gs, userId }) {
           {(pendingGroups.length > 0 || selectedCards.size >= 3)
             && targetMeldId === null
             && jokerSwapTarget === null
+            // hidden with 1-2 selected cards: they are not a group, and would be left out
             && (selectedCards.size === 0 || selectedCards.size >= 3) && (
             <Button variant="success" size="sm" onClick={handleMeld}>
               Lerak
@@ -508,7 +527,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
         </div>
       )}
 
-      {/* ── Player's own hand ────────────────────────────────────────────── */}
       <div className="gb-hand-wrap">
         <div className="gb-hand-label">
           Kezed ({myHand.length} lap)
@@ -549,7 +567,6 @@ export function GameBoard({ room, gameState: gs, userId }) {
         </div>
       </div>
 
-      {/* ── Status bar ──────────────────────────────────────────────────── */}
       <div className="gb-status">
         <span className="gb-status-text">{statusText()}</span>
         {actionError && <span className="gb-error ms-3">{actionError}</span>}

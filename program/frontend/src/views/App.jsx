@@ -13,6 +13,11 @@ import { Game } from './game/Game';
 import { Profile } from './profile/Profile';
 import { Admin } from './admin/Admin';
 
+/**
+ * The routes of the app.
+ *
+ * @returns {object} The router.
+ */
 function App() {
   return (
     <>

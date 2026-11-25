@@ -3,6 +3,16 @@ import { Badge, Button } from 'react-bootstrap';
 
 const AUTO_DISMISS_SECONDS = 6;
 
+/**
+ * The round summary, closed automatically after 6 seconds (when the server
+ * deals the next round).
+ *
+ * @param {object} props - Component props.
+ * @param {object} props.data - The `game:roundOver` event.
+ * @param {object} props.playerNames - Names by player id.
+ * @param {Function} props.onDismiss - Closes the summary.
+ * @returns {object} The overlay.
+ */
 export function RoundOver({ data, playerNames, onDismiss }) {
   const [seconds, setSeconds] = useState(AUTO_DISMISS_SECONDS);
 

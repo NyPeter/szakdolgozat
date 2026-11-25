@@ -5,8 +5,13 @@ import Alert from 'react-bootstrap/Alert';
 import { Link, useNavigate } from 'react-router';
 import axios from 'axios';
 import { connectSocket } from '../../socket';
-import './Register.css'; // Updated styles with background image
+import './Register.css';
 
+/**
+ * Registration form. On success the token is saved and the socket connects.
+ *
+ * @returns {object} The page.
+ */
 export const Register = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -16,7 +21,7 @@ export const Register = () => {
   const navigate = useNavigate();
   const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
-  // TODO: proper validation on frontend
+  // Only enables the button; the server checks the email format and password length.
   function validateForm() {
     return email.length > 0 && password.length > 0 && name.length > 0;
   }

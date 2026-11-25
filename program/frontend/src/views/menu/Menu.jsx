@@ -5,6 +5,11 @@ import './Menu.css';
 
 const api = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
+/**
+ * The main menu: login and registration, or the pages for logged-in users.
+ *
+ * @returns {object} The menu page.
+ */
 export const Menu = () => {
   const token = localStorage.getItem('accessToken');
   const isLoggedIn = !!token;

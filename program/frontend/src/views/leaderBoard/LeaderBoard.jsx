@@ -5,6 +5,11 @@ import {
 import './LeaderBoard.css';
 import axios from 'axios';
 
+/**
+ * Players ranked by games won, 10 per page.
+ *
+ * @returns {object} The page.
+ */
 export const LeaderBoard = () => {
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState([]);

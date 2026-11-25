@@ -7,6 +7,11 @@ import axios from 'axios';
 import { connectSocket } from '../../socket';
 import './Login.css';
 
+/**
+ * Login form. On success the token is saved and the socket connects.
+ *
+ * @returns {object} The page.
+ */
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
